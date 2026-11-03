@@ -134,6 +134,15 @@ button.pill{cursor:pointer;box-shadow:0 4px 0 rgba(0,0,0,.12)}
 .story summary{cursor:pointer;font-weight:700;color:#6c5ce7;font-size:17px}
 .st-h{font-size:26px;font-weight:800;margin-bottom:8px;text-align:center}
 .st-t{font-size:21px;line-height:1.7;text-align:left;margin:8px 0 12px}
+.rule{background:#fff;border-radius:22px;padding:14px 16px;margin:6px 0 4px;font-size:18px;line-height:1.75;box-shadow:0 5px 0 rgba(0,0,0,.12);border-right:6px solid #d35400}
+.rule b.en{color:#d35400}
+.rule .rl{font-size:20px;margin:2px 0}
+.rule .ex{direction:ltr;text-align:left;background:#f1f2f6;border-radius:10px;padding:4px 10px;margin:4px 0}
+.rule .ex.bad{color:#d63031;text-decoration:line-through}
+.rule .rtip{font-size:15px;color:#636e72;margin-top:6px}
+.rule .rtip span{white-space:nowrap}
+.tip{display:inline-block;background:#fff7d6;color:#2d3436;border-radius:14px;padding:6px 12px;font-size:17px;margin-top:6px}
+.tip.ok{background:#d4f8ec}
 /* goal + parent message */
 .goal{background:#fff;border-radius:22px;padding:12px 16px;margin:10px 0 4px;box-shadow:0 5px 0 rgba(0,0,0,.12);text-align:center}
 .goal.done{background:#fff7d6;border:3px solid #fdcb6e;animation:pulse 1.6s infinite}
@@ -227,6 +236,16 @@ const TOPICS = [
   {id:'sentences', he:'משפטים', en:'Sentences', icon:'🧩', color:'#e67e22', min:4, games:['build','hearS'], words:[]},
   {id:'grammar', he:'דקדוק', en:'Grammar', icon:'✏️', color:'#c0392b', min:4, games:['gap'], words:[]},
   {id:'stories', he:'סיפורים', en:'Stories', icon:'📖', color:'#16a085', min:4, games:['story'], words:[]},
+  {id:'dont', he:"don't / doesn't", en:'Negatives', icon:'🚫', color:'#d35400', min:3, games:['gap','fix'], words:[],
+   rule: `<b>📘 הכלל</b>
+     <div class="rl"><bdi class="en">I · you · we · they</bdi> ← <b class="en">don't</b></div>
+     <div class="rl"><bdi class="en">he · she · it</bdi> ← <b class="en">doesn't</b></div>
+     <div>אחרי <b class="en">doesn't</b> הפועל <u>בלי s</u>:</div>
+     <div class="ex en">She doesn't <b>like</b> fish. ✔</div>
+     <div class="ex en bad">She doesn't <b>likes</b> fish. ✘</div>
+     <div>בשאלה:</div>
+     <div class="ex en"><b>Do</b> you like fish? &nbsp; <b>Does</b> she like fish?</div>
+     <div class="rtip">טיפ: <span><bdi class="en">my brother</bdi> = הוא</span> · <span><bdi class="en">my parents</bdi> = הם</span> · <span><bdi class="en">the dog</bdi> = זה</span></div>`},
 ];
 TOPICS.forEach(t => t.words = t.words.map(([en,he,emoji]) => ({en,he,emoji})));
 
@@ -250,6 +269,7 @@ const GAMES = [
   {id:'hearS',     he:'שומעים משפט',    icon:'🎧', min:4, special:true},
   {id:'gap',       he:'משלימים את המשפט', icon:'✏️', min:4, special:true},
   {id:'story',     he:'קוראים סיפור',   icon:'📖', min:4, special:true},
+  {id:'fix',       he:'איזה משפט נכון?', icon:'✅', min:3, special:true},
 ];
 
 // [english, hebrew, picture] – no apostrophes, words are split on spaces for the building game
@@ -318,6 +338,78 @@ const GRAMMAR = [
   ['Pronouns – כינויים', 'That is ___ book, not yours!', ['my','me','I'], 'זה הספר שלי, לא שלך!'],
 ].map(([c,s,o,he]) => ({c, s, a: o[0], o, he}));
 
+// don't / doesn't – fill the gap: [label, sentence, options (right first), hebrew, tip shown after a mistake]
+const DONT_GAP = [
+  ["don't / doesn't", 'I ___ like milk.', ["don't","doesn't"], 'אני לא אוהב חלב.', "I ← don't"],
+  ["don't / doesn't", 'She ___ play the piano.', ["doesn't","don't"], 'היא לא מנגנת בפסנתר.', "She (היא) ← doesn't"],
+  ["don't / doesn't", 'We ___ go to school on Saturday.', ["don't","doesn't"], 'אנחנו לא הולכים לבית הספר בשבת.', "We ← don't"],
+  ["don't / doesn't", 'My brother ___ eat fish.', ["doesn't","don't"], 'אחי לא אוכל דגים.', "My brother = He (הוא) ← doesn't"],
+  ["don't / doesn't", 'They ___ live in Haifa.', ["don't","doesn't"], 'הם לא גרים בחיפה.', "They ← don't"],
+  ["don't / doesn't", 'The dog ___ like cats.', ["doesn't","don't"], 'הכלב לא אוהב חתולים.', "The dog = It ← doesn't"],
+  ["don't / doesn't", 'You ___ need a coat today.', ["don't","doesn't"], 'אתה לא צריך מעיל היום.', "You ← don't"],
+  ["don't / doesn't", 'My parents ___ drink coffee.', ["don't","doesn't"], 'ההורים שלי לא שותים קפה.', "My parents = They (הם) ← don't"],
+  ["don't / doesn't", 'It ___ rain much in summer.', ["doesn't","don't"], 'לא יורד הרבה גשם בקיץ.', "It ← doesn't"],
+  ["don't / doesn't", 'Dana ___ watch TV in the morning.', ["doesn't","don't"], 'דנה לא צופה בטלוויזיה בבוקר.', "Dana = She ← doesn't"],
+  ["don't / doesn't", 'I ___ have a sister.', ["don't","doesn't"], 'אין לי אחות.', "I ← don't"],
+  ["don't / doesn't", 'Tom and I ___ play basketball.', ["don't","doesn't"], 'תום ואני לא משחקים כדורסל.', "Tom and I = We ← don't"],
+  ["don't / doesn't", 'He ___ know the answer.', ["doesn't","don't"], 'הוא לא יודע את התשובה.', "He ← doesn't"],
+  ["don't / doesn't", 'Cats ___ like water.', ["don't","doesn't"], 'חתולים לא אוהבים מים.', "Cats (רבים) = They ← don't"],
+  ["don't / doesn't", 'My teacher ___ give homework on Fridays.', ["doesn't","don't"], 'המורה שלי לא נותנת שיעורי בית בימי שישי.', "My teacher = She/He ← doesn't"],
+  ["don't / doesn't", 'We ___ speak French.', ["don't","doesn't"], 'אנחנו לא מדברים צרפתית.', "We ← don't"],
+  ["don't / doesn't", 'This shop ___ open on Saturday.', ["doesn't","don't"], 'החנות הזאת לא פתוחה בשבת.', "This shop = It ← doesn't"],
+  ["don't / doesn't", 'The children ___ go to bed early.', ["don't","doesn't"], 'הילדים לא הולכים לישון מוקדם.', "The children (רבים) = They ← don't"],
+  ["don't / doesn't", 'Grandma ___ use a computer.', ["doesn't","don't"], 'סבתא לא משתמשת במחשב.', "Grandma = She ← doesn't"],
+  ["don't / doesn't", 'You and Noa ___ sit together.', ["don't","doesn't"], 'את ונועה לא יושבות יחד.', "You and Noa = You (אתן) ← don't"],
+  ["don't / doesn't", 'My phone ___ work.', ["doesn't","don't"], 'הטלפון שלי לא עובד.', "My phone = It ← doesn't"],
+  ["don't / doesn't", 'Most students ___ like tests.', ["don't","doesn't"], 'רוב התלמידים לא אוהבים מבחנים.', "Most students = They ← don't"],
+  ['Do / Does – שאלה', '___ you like pizza?', ['Do','Does'], 'אתה אוהב פיצה?', 'you ← Do'],
+  ['Do / Does – שאלה', '___ she speak English?', ['Does','Do'], 'היא מדברת אנגלית?', 'she ← Does'],
+  ['Do / Does – שאלה', '___ your dog bark at night?', ['Does','Do'], 'הכלב שלך נובח בלילה?', 'your dog = it ← Does'],
+  ['Do / Does – שאלה', '___ they play football after school?', ['Do','Does'], 'הם משחקים כדורגל אחרי בית הספר?', 'they ← Do'],
+  ['Do / Does – שאלה', '___ your parents work in Tel Aviv?', ['Do','Does'], 'ההורים שלך עובדים בתל אביב?', 'your parents = they ← Do'],
+  ['Do / Does – שאלה', '___ it snow in Eilat?', ['Does','Do'], 'יורד שלג באילת?', 'it ← Does'],
+  ['Do / Does – שאלה', '___ Ben have a bike?', ['Does','Do'], 'לבן יש אופניים?', 'Ben = he ← Does'],
+  ['Do / Does – שאלה', '___ we have English today?', ['Do','Does'], 'יש לנו אנגלית היום?', 'we ← Do'],
+  ["אחרי doesn't – בלי s", "She doesn't ___ chocolate.", ['like','likes'], 'היא לא אוהבת שוקולד.', "אחרי doesn't הפועל בלי s: like"],
+  ["אחרי doesn't – בלי s", "He doesn't ___ to school by bus.", ['go','goes'], 'הוא לא נוסע לבית הספר באוטובוס.', "אחרי doesn't הפועל בלי s: go"],
+  ["אחרי doesn't – בלי s", "My cat doesn't ___ much.", ['eat','eats'], 'החתול שלי לא אוכל הרבה.', "אחרי doesn't הפועל בלי s: eat"],
+  ["אחרי doesn't – בלי s", "Dana doesn't ___ a phone.", ['have','has'], 'לדנה אין טלפון.', "אחרי doesn't בא have (לא has)"],
+  ['אחרי Does – בלי s', 'Does he ___ in Jerusalem?', ['live','lives'], 'הוא גר בירושלים?', 'אחרי Does הפועל בלי s: live'],
+  ['אחרי Does – בלי s', 'Does your sister ___ the guitar?', ['play','plays'], 'אחותך מנגנת בגיטרה?', 'אחרי Does הפועל בלי s: play'],
+  ['תשובה קצרה', 'Do you like apples? Yes, I ___.', ['do','does'], 'אתה אוהב תפוחים? כן.', 'I ← do'],
+  ['תשובה קצרה', 'Does she have a cat? No, she ___.', ["doesn't","don't"], 'יש לה חתול? לא.', "she ← doesn't"],
+  ['תשובה קצרה', 'Do they live here? No, they ___.', ["don't","doesn't"], 'הם גרים פה? לא.', "they ← don't"],
+  ['תשובה קצרה', 'Does it work? Yes, it ___.', ['does','do'], 'זה עובד? כן.', 'it ← does'],
+  ["isn't או doesn't?", 'She ___ my sister.', ["isn't","doesn't","don't"], 'היא לא אחותי.', "אין כאן פועל פעולה (זה is) ← isn't"],
+  ["isn't או doesn't?", 'He ___ like spiders.', ["doesn't","isn't","don't"], 'הוא לא אוהב עכבישים.', "like הוא פועל ← doesn't"],
+  ["aren't או don't?", 'They ___ at home now.', ["aren't","don't","doesn't"], 'הם לא בבית עכשיו.', "אין פועל פעולה (זה are) ← aren't"],
+  ["am not או don't?", 'I ___ want to go.', ["don't","am not","doesn't"], 'אני לא רוצה ללכת.', "want הוא פועל ← don't"],
+].map(([c,s,o,he,tip]) => ({c, s, a: o[0], o, he, tip}));
+
+// don't / doesn't – which sentence is right? [right, wrong, wrong, hebrew, tip]
+const DONT_FIX = [
+  ["She doesn't like milk.", "She don't like milk.", "She doesn't likes milk.", 'היא לא אוהבת חלב.', "she ← doesn't, ואחריו like בלי s"],
+  ["They don't play tennis.", "They doesn't play tennis.", "They don't plays tennis.", 'הם לא משחקים טניס.', "they ← don't"],
+  ["He doesn't have a car.", "He don't have a car.", "He doesn't has a car.", 'אין לו מכונית.', "he ← doesn't, ואחריו have (לא has)"],
+  ["I don't know.", "I doesn't know.", "I not know.", 'אני לא יודע.', "I ← don't"],
+  ['Does she speak Hebrew?', 'Do she speak Hebrew?', 'Does she speaks Hebrew?', 'היא מדברת עברית?', 'she ← Does, ואחריו speak בלי s'],
+  ['Do you like music?', 'Does you like music?', 'Do you likes music?', 'אתה אוהב מוזיקה?', 'you ← Do'],
+  ["My dog doesn't bark.", "My dog don't bark.", "My dog doesn't barks.", 'הכלב שלי לא נובח.', "my dog = it ← doesn't"],
+  ["We don't go to school on Saturday.", "We doesn't go to school on Saturday.", "We don't goes to school on Saturday.", 'אנחנו לא הולכים לבית הספר בשבת.', "we ← don't"],
+  ["It doesn't work.", "It don't work.", "It doesn't works.", 'זה לא עובד.', "it ← doesn't, ואחריו work בלי s"],
+  ['Do they live near you?', 'Does they live near you?', 'Do they lives near you?', 'הם גרים לידך?', 'they ← Do'],
+  ["Dana doesn't eat meat.", "Dana don't eat meat.", 'Dana not eat meat.', 'דנה לא אוכלת בשר.', "Dana = she ← doesn't"],
+  ['Does your brother play football?', 'Do your brother play football?', 'Does your brother plays football?', 'אחיך משחק כדורגל?', 'your brother = he ← Does'],
+  ["My friends don't like rain.", "My friends doesn't like rain.", "My friends don't likes rain.", 'החברים שלי לא אוהבים גשם.', "my friends = they ← don't"],
+  ["He isn't tired.", "He doesn't tired.", "He don't tired.", 'הוא לא עייף.', "tired הוא לא פועל (זה is) ← isn't"],
+  ["Why don't you come?", "Why doesn't you come?", "Why you don't come?", 'למה אתה לא בא?', "you ← don't, והסדר: Why don't you"],
+  ["She doesn't watch TV.", "She don't watch TV.", "She doesn't watches TV.", 'היא לא צופה בטלוויזיה.', "she ← doesn't, ואחריו watch בלי es"],
+  ['Does it rain a lot here?', 'Do it rain a lot here?', 'Does it rains a lot here?', 'יורד פה הרבה גשם?', 'it ← Does'],
+  ["I don't have homework today.", "I doesn't have homework today.", "I don't has homework today.", 'אין לי שיעורי בית היום.', "I ← don't, ואחריו have"],
+  ["Tom doesn't go to bed late.", "Tom don't go to bed late.", "Tom doesn't goes to bed late.", 'תום לא הולך לישון מאוחר.', "Tom = he ← doesn't, ואחריו go בלי es"],
+  ["Are you hungry? No, I'm not.", "Are you hungry? No, I don't.", "Are you hungry? No, I doesn't.", 'אתה רעב? לא.', "השאלה עם Are ← התשובה I'm not"],
+].map(([a,b,c,he,tip]) => ({a, o: [a,b,c], he, tip}));
+
 // Short stories with comprehension questions (the right answer first).
 const STORIES = [
   {title:"Noa's Dog", emoji:'🐶', text:['Noa has a small brown dog.','His name is Max.','Every morning, Noa and Max go to the park.','Max loves to run after the ball.','One day, Max ran away!','Noa looked everywhere.','Then she found him under a big tree, sleeping.'],
@@ -353,7 +445,7 @@ const th = () => themeOf(cur);
 // Progress report for parents: address of the family Google Sheet (see parents-setup/README.md).
 const SYNC_URL = 'https://script.google.com/macros/s/AKfycbzvi2cl7509dBy0b4IC0lCGn7SCWp1PizncMNuVMHlSygvirVN2A8AHjBQIegaw2DdGPg/exec';
 
-const APP_VERSION = 13;
+const APP_VERSION = 14;
 
 // ---------- Helpers ----------
 const $ = s => document.querySelector(s);
@@ -651,6 +743,7 @@ function screenTopic(id){
   const t = TOPICS.find(x => x.id === id);
   show(`<div class="top"><button class="btn back" onclick="screenHome()">→</button>
     <div class="who">${t.icon} ${t.he}</div><span style="width:56px"></span></div>
+  ${t.rule ? `<div class="rule">${t.rule}</div>` : ''}
   <h1>מה משחקים?</h1>
   <div class="grid">${gamesFor(cur.level, t).map(g => `
     <button class="card" onclick="startGame('${t.id}','${g.id}')">
@@ -673,7 +766,7 @@ function startGame(topicId, gameId){
   const topic = TOPICS.find(t => t.id === topicId);
   game = {topic, id: gameId, words: wordsFor(topic), i: 0, mistakes: 0, total: 0, t0: Date.now()};
   ({learn: learnNew, listen: quizNew, picture: quizNew, translate: quizNew, memory: memoryNew, speak: speakNew, spell: spellNew,
-    build: buildNew, hearS: hearNew, gap: gapNew, story: storyNew})[gameId]();
+    build: buildNew, hearS: hearNew, gap: gapNew, story: storyNew, fix: fixNew})[gameId]();
 }
 function quitGame(){ const t = game.topic.id; if (game.stopRec) game.stopRec('quit'); game = null; if (window.speechSynthesis) speechSynthesis.cancel(); screenTopic(t); }
 function gameTop(){
@@ -1069,7 +1162,8 @@ function hearPick(k){
 }
 
 // 8) Experts: grammar – fill the gap
-function gapNew(){ game.list = sample(GRAMMAR, 10); game.total = game.list.length; gapRender(); }
+const gapBank = () => game.topic.id === 'dont' ? DONT_GAP : GRAMMAR;
+function gapNew(){ game.list = sample(gapBank(), 10); game.total = game.list.length; gapRender(); }
 function gapRender(){
   const q = game.list[game.i];
   if (!game.opts) game.opts = shuffle(q.o);
@@ -1090,6 +1184,30 @@ function gapPick(k){
     later(() => { game.i++; game.opts = null; game.i >= game.total ? finish() : gapRender(); }, 2400);
   } else {
     el.classList.add('wrong'); el.disabled = true; game.mistakes++; sfx.bad();
+    if (q.tip) $('#reveal').innerHTML = '<span class="tip">💡 ' + esc(q.tip) + '</span>';
+  }
+}
+
+// 10) don't / doesn't: which sentence is right?
+function fixNew(){ game.list = sample(DONT_FIX, 8); game.total = game.list.length; fixRender(); }
+function fixRender(){
+  const q = game.list[game.i];
+  if (!game.opts) game.opts = shuffle(q.o);
+  game.locked = false;
+  show(gameTop() + `<div class="q"><div class="hint">איזה משפט נכון?</div><div class="he">${esc(q.he)}</div><div id="reveal" class="reveal"></div></div>
+  <div class="opts one">${game.opts.map((o,k) => `<button class="opt" id="o${k}" onclick="fixPick(${k})"><span class="en">${esc(o)}</span></button>`).join('')}</div>`);
+}
+function fixPick(k){
+  if (game.locked) return;
+  const q = game.list[game.i], el = $('#o'+k);
+  if (game.opts[k] === q.a){
+    game.locked = true; el.classList.add('right'); sfx.ok();
+    $('#reveal').innerHTML = '<span class="tip ok">✔ ' + esc(q.tip) + '</span>';
+    later(() => say(q.a), 300);
+    later(() => { game.i++; game.opts = null; game.i >= game.total ? finish() : fixRender(); }, 2600);
+  } else {
+    el.classList.add('wrong'); el.disabled = true; game.mistakes++; sfx.bad();
+    $('#reveal').innerHTML = '<span class="tip">💡 ' + esc(q.tip) + '</span>';
   }
 }
 
