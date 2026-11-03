@@ -111,7 +111,7 @@ async function load(){
     const res = await (await fetch(SYNC_URL + '?action=all&pin=' + encodeURIComponent(pin) + '&t=' + Date.now())).json();
     if (!res.ok){ localStorage.removeItem(PIN_KEY); return screenPin(res.error === 'pin' ? 'הקוד לא נכון' : 'שגיאה'); }
     localStorage.setItem(PIN_KEY, pin);
-    kids = res.kids || [];
+    kids = (res.kids || []).filter(k => k.app !== 'theory');   // Liza's theory app shares the sheet
     render();
   } catch(e){
     app.innerHTML = `<div class="err">לא הצלחתי לטעון את הנתונים. בדקו את האינטרנט ונסו שוב.</div><button class="btn" onclick="load()">🔄 לנסות שוב</button>`;
