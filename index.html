@@ -318,7 +318,12 @@ const isStandalone = () => matchMedia('(display-mode: standalone)').matches || n
 const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; if (!cur) screenProfiles(); });
 window.addEventListener('appinstalled', () => { installEvt = null; if (!cur) screenProfiles(); });
+// Opens this same page in Chrome on Android (or its Play Store page if Chrome is missing).
+const chromeUrl = () => `intent://${location.host}${location.pathname}#Intent;scheme=https;package=com.android.chrome;end`;
+const chromeBtn = () => /android/i.test(navigator.userAgent) && location.protocol === 'https:'
+  ? `<a class="btn primary small" style="text-decoration:none;display:inline-block;margin-top:8px" href="${chromeUrl()}">🌐 פתיחה ב-Chrome</a>` : '';
 function installBox(){
+  if (badMicBrowser) return `<div class="note">🎤 בדפדפן הזה משחק המיקרופון לא עובד.<br>כדאי לפתוח את האפליקציה ב-<b>Chrome</b> ולהתקין משם.<br>${chromeBtn()}</div>`;
   if (isStandalone()) return '';
   if (installEvt) return `<div class="note"><button class="btn primary" onclick="installApp()">📲 התקנת האפליקציה בטלפון</button></div>`;
   if (isIOS) return `<div class="note">📲 להתקנה באייפון: לחצו על <b>שיתוף</b> <span style="font-size:22px">⎋</span> ואז <b>"הוספה למסך הבית"</b></div>`;
@@ -536,7 +541,7 @@ function speakRender(msg, good){
     <button class="btn small" onclick="say(game.list[game.i].en)">🔊 איך אומרים?</button></div>
   <div class="center">
     <button class="mic ${game.rec ? 'on' : ''}" onclick="speakGo()">🎤</button>
-    <div><span class="msg ${good ? 'good' : ''}">${msg || 'לחצו על המיקרופון ותגידו את המילה'}</span></div>
+    <div><span class="msg ${good ? 'good' : ''}">${msg || (badMicBrowser ? 'תגידו את המילה בקול ולחצו "אמרתי!"' + micHelp() : 'לחצו על המיקרופון ותגידו את המילה')}</span></div>
     ${game.rec ? '' : `<div class="row" style="margin-top:6px">
       ${micBroken || game.tries >= 1 ? `<button class="btn small primary" onclick="speakSaidIt()">✅ אמרתי!</button>` : ''}
       ${game.tries >= 2 ? `<button class="btn small" onclick="speakNext()">דלג ⏭</button>` : ''}
@@ -544,12 +549,13 @@ function speakRender(msg, good){
   </div>`);
 }
 // Set when the phone's speech recognition never answers (common in iPhone home-screen apps).
-let micBroken = false, recog = null;
+let recog = null;
 const UA = navigator.userAgent;
 // Browsers where the speech API exists but never works: in-app browsers (WebView) and Samsung/Xiaomi/Firefox browsers.
 const badMicBrowser = /; wv\)|FBAN|FBAV|Instagram|SamsungBrowser|MiuiBrowser|Firefox/i.test(UA);
+let micBroken = badMicBrowser;
 const micHelp = () => `<div style="margin-top:8px">${badMicBrowser
-  ? '<div class="note" style="margin:6px 0">💡 בדפדפן הזה המיקרופון לא עובד. פתחו את הקישור ב-<b>Chrome</b> והתקינו משם.</div>' : ''}
+  ? `<div class="note" style="margin:6px 0">💡 בדפדפן הזה המיקרופון לא עובד. פתחו את האפליקציה ב-<b>Chrome</b> והתקינו משם.<br>${chromeBtn()}</div>` : ''}
   <a class="btn small" style="text-decoration:none;display:inline-block" href="diag.html">🔧 בדיקת מיקרופון</a></div>`;
 function speakGo(attempt){
   attempt = attempt || 0;
