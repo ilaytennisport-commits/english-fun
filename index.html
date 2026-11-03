@@ -551,33 +551,43 @@ function speakGo(){
   if ('speechSynthesis' in window) speechSynthesis.cancel();
   const g = game, w = game.list[game.i];
   let r;
-  try { r = recog = new SR(); } catch(e){ micBroken = true; return speakRender('המיקרופון לא זמין במכשיר הזה – תגידו בקול ולחצו "אמרתי!"'); }
+  try { r = recog = new SR(); } catch(e){ micBroken = true; return speakRender('המיקרופון לא זמין במכשיר הזה – תגידו בקול ולחצו "אמרתי!"' + code()); }
   r.lang = 'en-US'; r.maxAlternatives = 5; r.interimResults = true; r.continuous = false;
-  let done = false, gotAudio = false, alts = [];
-  const timer = setTimeout(() => { try { r.abort(); } catch(e){} end(alts, 'timeout'); }, 6000);
+  let done = false, gotAudio = false, alts = [], timer = null;
+  const log = [];  // event names, shown small so we can see why it didn't hear
+  const arm = ms => { clearTimeout(timer); timer = setTimeout(() => { log.push('timeout'); try { r.abort(); } catch(e){} end(alts, 'timeout'); }, ms); };
+  arm(8000);  // waiting for the mic to start
+  const code = () => `<div style="font-size:12px;opacity:.6;margin-top:4px" class="en">${esc(log.join(' › '))}</div>`;
   const end = (heard, err) => {
     if (done) return; done = true; clearTimeout(timer);
     if (game !== g) return;
     game.rec = false;
     if (err === 'not-allowed' || err === 'service-not-allowed') { micBroken = true; return speakRender('צריך לאשר גישה למיקרופון 🙏 (או להגיד בקול וללחוץ "אמרתי!")'); }
     if (heard && heardOk(w.en, heard)) return speakSuccess();
-    if (err === 'timeout' && !gotAudio && !heard.length) { micBroken = true; return speakRender('המיקרופון לא עונה בטלפון הזה 😕 תגידו בקול ולחצו "אמרתי!"'); }
+    if (err === 'timeout' && !gotAudio && !heard.length) { micBroken = true; return speakRender('המיקרופון לא עונה בטלפון הזה 😕 תגידו בקול ולחצו "אמרתי!"' + code()); }
     if (err === 'network') return speakRender('המיקרופון צריך אינטרנט 📶 – תגידו בקול ולחצו "אמרתי!"');
     game.tries++; game.mistakes++;
-    const msg = heard && heard[0] ? `שמעתי "<span class="en">${esc(heard[0])}</span>"` : 'לא שמעתי 🙉 דברו חזק וקרוב';
-    speakRender(`${msg} – נסו שוב! 💪`);
+    const msg = heard && heard[0] ? `שמעתי "<span class="en">${esc(heard[0])}</span>"` : 'לא שמעתי 🙉 חכו ל"דברו עכשיו" ודברו חזק וקרוב';
+    speakRender(`${msg} – נסו שוב! 💪${code()}`);
   };
-  r.onaudiostart = r.onsoundstart = r.onspeechstart = () => { gotAudio = true; };
+  const setMsg = h => { const m = document.querySelector('.msg'); if (m && game === g) m.innerHTML = h; };
+  r.onstart = () => { log.push('start'); };
+  r.onaudiostart = () => { log.push('audio'); gotAudio = true; arm(8000); setMsg('דברו עכשיו! 👄'); };
+  r.onsoundstart = () => { log.push('sound'); gotAudio = true; };
+  r.onspeechstart = () => { log.push('speech'); gotAudio = true; setMsg('שומע אותך... 👂'); };
+  r.onspeechend = () => { log.push('speechend'); };
+  r.onnomatch = () => { log.push('nomatch'); };
   r.onresult = e => {
+    log.push('result');
     gotAudio = true;
     alts = [];
     for (const res of e.results) for (const a of res) alts.push(a.transcript);
     if (heardOk(w.en, alts)) { try { r.abort(); } catch(err){} end(alts); }           // accept as soon as we hear it
     else if (e.results[e.results.length-1].isFinal) end(alts);
   };
-  r.onerror = e => end(alts, e.error);
-  r.onend = () => end(alts);
-  game.rec = true; speakRender('אני מקשיב... 👂 (לחיצה נוספת עוצרת)');
+  r.onerror = e => { log.push('error:' + e.error); end(alts, e.error); };
+  r.onend = () => { log.push('end'); end(alts); };
+  game.rec = true; speakRender('רגע... מכין את המיקרופון 🎤');
   try { r.start(); } catch(e){ end(alts, 'start'); }
 }
 function speakSuccess(){
