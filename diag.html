@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>בדיקת מיקרופון – English Fun</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,sans-serif;background:#eef1ff;color:#2d3436;padding:14px;font-size:18px}
+h1{font-size:26px;text-align:center;margin:6px 0 14px}
+.box{background:#fff;border-radius:18px;padding:14px;margin-bottom:12px;box-shadow:0 3px 0 rgba(0,0,0,.08)}
+.box h2{font-size:20px;margin:0 0 8px}
+.row{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid #eee}
+.row:last-child{border:none}
+.row b{white-space:nowrap}
+.ok{color:#00a37a;font-weight:700}.bad{color:#d63031;font-weight:700}.warn{color:#e17055;font-weight:700}
+button{width:100%;font-size:21px;font-weight:700;padding:14px;border:none;border-radius:16px;background:#6c5ce7;color:#fff;margin-top:8px;font-family:inherit}
+button.green{background:#00b894}
+button:disabled{opacity:.5}
+.meter{height:22px;background:#eee;border-radius:99px;overflow:hidden;margin-top:8px}
+.meter div{height:100%;width:0;background:#00b894;transition:width .08s}
+.log{direction:ltr;text-align:left;font-family:monospace;font-size:14px;background:#f6f6f6;border-radius:10px;padding:8px;margin-top:8px;white-space:pre-wrap;min-height:20px}
+.big{font-size:22px;font-weight:800;text-align:center;margin-top:8px}
+.verdict{background:#fff7d6;border:3px solid #fdcb6e}
+a{color:#6c5ce7}
+</style>
+</head>
+<body>
+<h1>🔧 בדיקת מיקרופון</h1>
+
+<div class="box"><h2>1. פרטי הטלפון והדפדפן</h2><div id="info"></div></div>
+
+<div class="box"><h2>2. האם המיקרופון קולט קול?</h2>
+  <div>לחצו, ודברו או מחאו כף במשך 4 שניות.</div>
+  <button id="b1" onclick="testMic()">🎤 בדיקת מיקרופון</button>
+  <div class="meter"><div id="lvl"></div></div>
+  <div id="r1" class="big"></div>
+</div>
+
+<div class="box"><h2>3. זיהוי דיבור באנגלית</h2>
+  <div>לחצו, וכשכתוב "דברו עכשיו" אמרו בקול: <b dir="ltr">apple</b></div>
+  <button id="b2" onclick="testSR('en-US','r2','l2','b2')">🗣️ בדיקת זיהוי באנגלית</button>
+  <div id="r2" class="big"></div><div id="l2" class="log"></div>
+</div>
+
+<div class="box"><h2>4. זיהוי דיבור בעברית</h2>
+  <div>לחצו ואמרו בקול: <b>שלום</b></div>
+  <button id="b3" onclick="testSR('he-IL','r3','l3','b3')">🗣️ בדיקת זיהוי בעברית</button>
+  <div id="r3" class="big"></div><div id="l3" class="log"></div>
+</div>
+
+<div class="box verdict"><h2>📋 סיכום</h2><div id="verdict">הריצו את הבדיקות 2, 3 ו-4.</div>
+  <button class="green" onclick="shareResults()">📤 שליחת התוצאות</button>
+</div>
+
+<p style="text-align:center"><a href="./">← חזרה לאפליקציה</a></p>
+
+<script>
+const results = {};
+const ua = navigator.userAgent;
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+const isWebView = /; wv\)/.test(ua) || /FBAN|FBAV|Instagram|Line\/|WhatsApp/i.test(ua);
+const browser =
+  /SamsungBrowser\/([\d.]+)/.test(ua) ? 'Samsung Internet ' + RegExp.$1 :
+  /EdgA\/([\d.]+)/.test(ua) ? 'Edge ' + RegExp.$1 :
+  /OPR\/([\d.]+)/.test(ua) ? 'Opera ' + RegExp.$1 :
+  /Firefox\/([\d.]+)/.test(ua) ? 'Firefox ' + RegExp.$1 :
+  /MiuiBrowser/.test(ua) ? 'Xiaomi Browser' :
+  isWebView ? 'דפדפן פנימי של אפליקציה (WebView)' :
+  /Chrome\/([\d.]+)/.test(ua) ? 'Chrome ' + RegExp.$1 :
+  /Safari/.test(ua) ? 'Safari' : 'לא ידוע';
+const standalone = matchMedia('(display-mode: standalone)').matches;
+results.browser = browser;
+results.standalone = standalone;
+results.sr = !!SR;
+
+function row(k, v, cls){ return `<div class="row"><b>${k}</b><span class="${cls||''}">${v}</span></div>`; }
+async function showInfo(){
+  let perm = 'לא ידוע';
+  try { perm = (await navigator.permissions.query({name:'microphone'})).state; } catch(e){}
+  results.perm = perm;
+  const voices = speechSynthesis ? speechSynthesis.getVoices() : [];
+  results.enVoices = voices.filter(v => /^en/i.test(v.lang)).length;
+  const goodBrowser = /^Chrome|^Edge/.test(browser);
+  document.getElementById('info').innerHTML =
+    row('דפדפן', browser, goodBrowser ? 'ok' : 'bad') +
+    row('נפתח מהאייקון?', standalone ? 'כן' : 'לא (מהדפדפן)') +
+    row('זיהוי דיבור קיים?', SR ? 'כן' : 'לא', SR ? 'ok' : 'bad') +
+    row('הרשאת מיקרופון', {granted:'מאושרת ✅',denied:'חסומה ❌',prompt:'עוד לא נשאלה'}[perm] || perm, perm==='denied'?'bad':perm==='granted'?'ok':'') +
+    row('חיבור מאובטח', isSecureContext ? 'כן' : 'לא', isSecureContext ? 'ok' : 'bad') +
+    `<div class="log">${ua}</div>`;
+  verdict();
+}
+if (window.speechSynthesis) speechSynthesis.onvoiceschanged = showInfo;
+showInfo();
+
+async function testMic(){
+  const b = document.getElementById('b1'), r = document.getElementById('r1'), lvl = document.getElementById('lvl');
+  b.disabled = true; r.textContent = 'מבקש גישה למיקרופון...';
+  let stream;
+  try { stream = await navigator.mediaDevices.getUserMedia({audio:true}); }
+  catch(e){ results.mic = 'שגיאה: ' + e.name; r.innerHTML = `<span class="bad">❌ אין גישה למיקרופון (${e.name})</span>`; b.disabled = false; verdict(); return; }
+  r.textContent = 'דברו עכשיו! 👄';
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const an = ctx.createAnalyser(); an.fftSize = 512;
+  ctx.createMediaStreamSource(stream).connect(an);
+  const data = new Uint8Array(an.fftSize); let max = 0;
+  const t0 = performance.now();
+  await new Promise(done => (function tick(){
+    an.getByteTimeDomainData(data);
+    let peak = 0; for (const v of data) peak = Math.max(peak, Math.abs(v - 128));
+    max = Math.max(max, peak); lvl.style.width = Math.min(100, peak * 1.6) + '%';
+    performance.now() - t0 < 4000 ? requestAnimationFrame(tick) : done();
+  })());
+  stream.getTracks().forEach(t => t.stop()); ctx.close(); lvl.style.width = 0;
+  results.mic = 'עוצמה ' + max;
+  r.innerHTML = max > 8 ? `<span class="ok">✅ המיקרופון עובד (עוצמה ${max})</span>` : `<span class="bad">❌ המיקרופון לא קלט קול (עוצמה ${max})</span>`;
+  b.disabled = false; verdict();
+}
+
+function testSR(lang, rid, lid, bid){
+  const r = document.getElementById(rid), l = document.getElementById(lid), b = document.getElementById(bid);
+  if (!SR){ r.innerHTML = '<span class="bad">❌ אין זיהוי דיבור בדפדפן הזה</span>'; results[lang] = 'אין'; verdict(); return; }
+  b.disabled = true; l.textContent = ''; r.textContent = 'רגע... מכין 🎤';
+  const t0 = performance.now(), log = [];
+  const add = s => { log.push(((performance.now()-t0)/1000).toFixed(1) + 's ' + s); l.textContent = log.join('\n'); };
+  let rec, heard = '', finished = false;
+  const finish = why => {
+    if (finished) return; finished = true; clearTimeout(timer);
+    const evs = log.map(x => x.split(' ')[1]).join(',');
+    results[lang] = heard ? 'שמע: ' + heard : 'לא שמע (' + why + ') [' + evs + ']';
+    r.innerHTML = heard ? `<span class="ok">✅ זוהה: "<span dir="ltr">${heard}</span>"</span>` : `<span class="bad">❌ לא זוהה כלום (${why})</span>`;
+    b.disabled = false; verdict();
+  };
+  const timer = setTimeout(() => { add('TIMEOUT'); try { rec.abort(); } catch(e){} finish('timeout'); }, 10000);
+  try { rec = new SR(); } catch(e){ add('new failed: ' + e.message); return finish('create'); }
+  rec.lang = lang; rec.interimResults = true; rec.maxAlternatives = 3;
+  rec.onstart = () => add('start');
+  rec.onaudiostart = () => { add('audiostart'); r.textContent = 'דברו עכשיו! 👄'; };
+  rec.onsoundstart = () => add('soundstart');
+  rec.onspeechstart = () => add('speechstart');
+  rec.onspeechend = () => add('speechend');
+  rec.onaudioend = () => add('audioend');
+  rec.onnomatch = () => add('nomatch');
+  rec.onresult = e => { heard = [...e.results].map(x => x[0].transcript).join(' '); add('result: ' + heard); };
+  rec.onerror = e => { add('error: ' + e.error + (e.message ? ' ' + e.message : '')); };
+  rec.onend = () => { add('end'); finish(log.find(x => x.includes('error:')) ? log.find(x => x.includes('error:')).split('error: ')[1] : 'ended'); };
+  try { rec.start(); add('start() called'); } catch(e){ add('start() threw: ' + e.message); finish('start'); }
+}
+
+function verdict(){
+  const v = document.getElementById('verdict'), tips = [];
+  if (isWebView) tips.push('❗ הקישור נפתח בתוך אפליקציה אחרת (כמו וואטסאפ/פייסבוק). פתחו אותו ב-<b>Chrome</b>: שלוש נקודות ⋮ ← "פתיחה ב-Chrome".');
+  else if (!/^Chrome|^Edge/.test(browser)) tips.push(`❗ הדפדפן הוא <b>${browser}</b> – בו זיהוי הדיבור לא עובד. פתחו את הקישור ב-<b>Chrome</b> והתקינו משם.`);
+  if (results.perm === 'denied' || /שגיאה/.test(results.mic || '')) tips.push('❗ המיקרופון חסום. הגדרות הטלפון ← אפליקציות ← Chrome ← הרשאות ← מיקרופון ← לאפשר.');
+  if (/^עוצמה/.test(results.mic || '') && parseInt(results.mic.split(' ')[1]) <= 8) tips.push('❗ המיקרופון לא קולט קול – אולי משהו מכסה אותו או שאוזניות בלוטות\' מחוברות.');
+  const en = results['en-US'] || '', he = results['he-IL'] || '';
+  if (/timeout/.test(en) && !/audiostart/.test(en)) tips.push('❗ שירות זיהוי הדיבור של גוגל לא עונה. בדקו ש<b>"Google"</b> ו<b>"Speech Services by Google"</b> מותקנות ומעודכנות בחנות Play.');
+  if (/network/.test(en)) tips.push('❗ זיהוי הדיבור צריך אינטרנט – בדקו חיבור.');
+  if (/language-not-supported/.test(en)) tips.push('❗ אין בטלפון זיהוי לאנגלית. Chrome ← הגדרות ← שפות, הוסיפו English.');
+  if (/^שמע/.test(he) && !/^שמע/.test(en) && en) tips.push('❗ עברית עובדת אבל אנגלית לא – צריך להוסיף אנגלית לזיהוי הדיבור של גוגל (הגדרות ← Google ← הקלדה קולית ← שפות).');
+  if (/^שמע/.test(en)) tips.push('✅ זיהוי הדיבור באנגלית עובד בדפדפן הזה!');
+  v.innerHTML = tips.length ? tips.join('<br><br>') : 'הריצו את הבדיקות 2, 3 ו-4.';
+}
+
+async function shareResults(){
+  const text = 'בדיקת מיקרופון English Fun\n' + Object.entries(results).map(([k,v]) => k + ': ' + v).join('\n') +
+    '\nלוג אנגלית:\n' + document.getElementById('l2').textContent + '\nלוג עברית:\n' + document.getElementById('l3').textContent + '\n' + ua;
+  if (navigator.share) { try { await navigator.share({text}); return; } catch(e){} }
+  try { await navigator.clipboard.writeText(text); alert('התוצאות הועתקו – הדביקו אותן בהודעה'); } catch(e){ prompt('העתיקו:', text); }
+}
+</script>
+</body>
+</html>

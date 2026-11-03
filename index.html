@@ -545,13 +545,24 @@ function speakRender(msg, good){
 }
 // Set when the phone's speech recognition never answers (common in iPhone home-screen apps).
 let micBroken = false, recog = null;
-function speakGo(){
+const UA = navigator.userAgent;
+// Browsers where the speech API exists but never works: in-app browsers (WebView) and Samsung/Xiaomi/Firefox browsers.
+const badMicBrowser = /; wv\)|FBAN|FBAV|Instagram|SamsungBrowser|MiuiBrowser|Firefox/i.test(UA);
+const micHelp = () => `<div style="margin-top:8px">${badMicBrowser
+  ? '<div class="note" style="margin:6px 0">💡 בדפדפן הזה המיקרופון לא עובד. פתחו את הקישור ב-<b>Chrome</b> והתקינו משם.</div>' : ''}
+  <a class="btn small" style="text-decoration:none;display:inline-block" href="diag.html">🔧 בדיקת מיקרופון</a></div>`;
+function speakGo(attempt){
+  attempt = attempt || 0;
   if (game.locked) return;
   if (game.rec){ try { recog.stop(); } catch(e){} return; }  // tap again = stop listening
-  if ('speechSynthesis' in window) speechSynthesis.cancel();
+  // If a word is still being read aloud, stop it and give the audio a moment to free the mic.
+  if (window.speechSynthesis && (speechSynthesis.speaking || speechSynthesis.pending)){
+    speechSynthesis.cancel(); game.rec = true; speakRender('רגע... מכין את המיקרופון 🎤');
+    return later(() => { game.rec = false; speakGo(attempt); }, 400);
+  }
   const g = game, w = game.list[game.i];
   let r;
-  try { r = recog = new SR(); } catch(e){ micBroken = true; return speakRender('המיקרופון לא זמין במכשיר הזה – תגידו בקול ולחצו "אמרתי!"' + code()); }
+  try { r = recog = new SR(); } catch(e){ micBroken = true; return speakRender('המיקרופון לא זמין במכשיר הזה – תגידו בקול ולחצו "אמרתי!"' + micHelp()); }
   r.lang = 'en-US'; r.maxAlternatives = 5; r.interimResults = true; r.continuous = false;
   let done = false, gotAudio = false, alts = [], timer = null;
   const log = [];  // event names, shown small so we can see why it didn't hear
@@ -562,10 +573,15 @@ function speakGo(){
     if (done) return; done = true; clearTimeout(timer);
     if (game !== g) return;
     game.rec = false;
-    if (err === 'not-allowed' || err === 'service-not-allowed') { micBroken = true; return speakRender('צריך לאשר גישה למיקרופון 🙏 (או להגיד בקול וללחוץ "אמרתי!")'); }
+    if (err === 'not-allowed' || err === 'service-not-allowed') { micBroken = true; return speakRender('צריך לאשר גישה למיקרופון 🙏 (או להגיד בקול וללחוץ "אמרתי!")' + code() + micHelp()); }
     if (heard && heardOk(w.en, heard)) return speakSuccess();
-    if (err === 'timeout' && !gotAudio && !heard.length) { micBroken = true; return speakRender('המיקרופון לא עונה בטלפון הזה 😕 תגידו בקול ולחצו "אמרתי!"' + code()); }
-    if (err === 'network') return speakRender('המיקרופון צריך אינטרנט 📶 – תגידו בקול ולחצו "אמרתי!"');
+    if (err === 'timeout' && !gotAudio && !heard.length){
+      if (attempt === 0) return speakGo(1);  // the phone's speech service is sometimes slow to wake up – try once more
+      micBroken = true; return speakRender('המיקרופון לא עונה בטלפון הזה 😕 תגידו בקול ולחצו "אמרתי!"' + code() + micHelp());
+    }
+    if (err === 'network') return speakRender('המיקרופון צריך אינטרנט 📶 – תגידו בקול ולחצו "אמרתי!"' + code());
+    if (err === 'audio-capture') { micBroken = true; return speakRender('לא מצאתי מיקרופון 🎤 – תגידו בקול ולחצו "אמרתי!"' + code() + micHelp()); }
+    if (err === 'language-not-supported') { micBroken = true; return speakRender('אין בטלפון זיהוי דיבור באנגלית – תגידו בקול ולחצו "אמרתי!"' + code() + micHelp()); }
     game.tries++; game.mistakes++;
     const msg = heard && heard[0] ? `שמעתי "<span class="en">${esc(heard[0])}</span>"` : 'לא שמעתי 🙉 חכו ל"דברו עכשיו" ודברו חזק וקרוב';
     speakRender(`${msg} – נסו שוב! 💪${code()}`);
