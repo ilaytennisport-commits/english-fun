@@ -54,7 +54,7 @@ button.pill{cursor:pointer;box-shadow:0 4px 0 rgba(0,0,0,.12)}
 .avatars{display:flex;flex-wrap:wrap;gap:8px}
 .av{font-size:38px;background:#f1f2f6;border:3px solid transparent;border-radius:18px;padding:4px 8px;cursor:pointer}
 .av.sel{border-color:#6c5ce7;background:#e8e4ff}
-.levels{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.levels{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
 .lv{background:#f1f2f6;border:3px solid transparent;border-radius:18px;padding:12px 4px;font-family:inherit;cursor:pointer;color:inherit}
 .lv b{display:block;font-size:20px}.lv small{font-size:15px;color:#636e72}
 .lv.sel{border-color:#6c5ce7;background:#e8e4ff}
@@ -115,6 +115,25 @@ button.pill{cursor:pointer;box-shadow:0 4px 0 rgba(0,0,0,.12)}
 .sticker.lock{background:rgba(255,255,255,.4);font-size:30px;color:#fff}
 .conf{position:fixed;top:-60px;pointer-events:none;animation:fall 3s linear forwards;z-index:9}
 .note{background:rgba(255,255,255,.85);border-radius:18px;padding:12px 16px;text-align:center;font-size:17px;margin-top:16px}
+/* experts: sentences, grammar, stories */
+.sent{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin:10px 0;direction:ltr}
+.sw{min-width:44px;padding:6px 8px;border-bottom:4px solid #fff;font-size:24px;font-weight:700;color:#fff;text-align:center}
+.sw.f{animation:pop .3s}
+.tile.wt{width:auto;min-width:56px;padding:0 14px;font-size:24px}
+.tile.wt:disabled{display:none}
+.tag{display:inline-block;background:rgba(255,255,255,.9);border-radius:99px;padding:5px 14px;font-size:15px;font-weight:700;color:#6c5ce7}
+.gap{font-size:clamp(24px,6.5vw,32px);font-weight:700;color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.15);margin:14px 4px 6px;line-height:1.4}
+.blank{display:inline-block;min-width:70px;border-bottom:4px solid #fdcb6e;color:#fdcb6e}
+.blank.ok{color:#55efc4;border-color:#55efc4}
+.reveal{min-height:26px;font-size:20px;font-weight:700;color:#fff}
+.reveal .en{font-size:22px}
+.opts.words.n3{grid-template-columns:1fr 1fr 1fr}
+.opts.one{grid-template-columns:1fr}
+.opts.one .opt{font-size:22px;min-height:64px;font-weight:700}
+.story{background:#fff;border-radius:24px;padding:16px;margin-bottom:14px;box-shadow:0 6px 0 rgba(0,0,0,.12)}
+.story summary{cursor:pointer;font-weight:700;color:#6c5ce7;font-size:17px}
+.st-h{font-size:26px;font-weight:800;margin-bottom:8px;text-align:center}
+.st-t{font-size:21px;line-height:1.7;text-align:left;margin:8px 0 12px}
 /* goal + parent message */
 .goal{background:#fff;border-radius:22px;padding:12px 16px;margin:10px 0 4px;box-shadow:0 5px 0 rgba(0,0,0,.12);text-align:center}
 .goal.done{background:#fff7d6;border:3px solid #fdcb6e;animation:pulse 1.6s infinite}
@@ -195,6 +214,19 @@ const TOPICS = [
   {id:'actions', he:'פעלים', en:'Actions', icon:'🏃', color:'#16a085', min:3, words:[
     ['run','לרוץ','🏃'],['swim','לשחות','🏊'],['eat','לאכול','🍽️'],['sleep','לישון','💤'],['read','לקרוא','📖'],['write','לכתוב','✍️'],
     ['sing','לשיר','🎤'],['dance','לרקוד','💃'],['play','לשחק','🎮'],['draw','לצייר','🎨'],['cry','לבכות','😭'],['drink','לשתות','🥤']]},
+  {id:'sports', he:'ספורט', en:'Sports', icon:'⚽', color:'#27ae60', min:3, words:[
+    ['football','כדורגל','⚽'],['basketball','כדורסל','🏀'],['tennis','טניס','🎾'],['swimming','שחייה','🏊'],['running','ריצה','🏃'],['cycling','רכיבה על אופניים','🚴'],
+    ['skiing','סקי','⛷️'],['volleyball','כדורעף','🏐'],['baseball','בייסבול','⚾'],['boxing','אגרוף','🥊'],['golf','גולף','⛳'],['surfing','גלישה','🏄']]},
+  {id:'jobs', he:'מקצועות', en:'Jobs', icon:'🧑‍⚕️', color:'#8e44ad', min:3, words:[
+    ['doctor','רופא','🧑‍⚕️'],['farmer','חקלאי','🧑‍🌾'],['cook','טבח','🧑‍🍳'],['pilot','טייס','🧑‍✈️'],['firefighter','כבאי','🧑‍🚒'],['astronaut','אסטרונאוט','🧑‍🚀'],
+    ['artist','אמן','🧑‍🎨'],['singer','זמר','🧑‍🎤'],['scientist','מדען','🧑‍🔬'],['judge','שופט','🧑‍⚖️'],['mechanic','מכונאי','🧑‍🔧'],['programmer','מתכנת','🧑‍💻']]},
+  {id:'places', he:'מקומות בעיר', en:'Places', icon:'🏙️', color:'#2c3e50', min:3, words:[
+    ['hospital','בית חולים','🏥'],['bank','בנק','🏦'],['library','ספרייה','📚'],['park','פארק','🏞️'],['restaurant','מסעדה','🍴'],['supermarket','סופרמרקט','🛒'],
+    ['museum','מוזיאון','🏛️'],['cinema','קולנוע','🎬'],['airport','שדה תעופה','🛫'],['station','תחנה','🚉'],['hotel','מלון','🏨'],['beach','חוף','🏖️']]},
+  // Experts (grade 7+): sentences, grammar and reading instead of single words.
+  {id:'sentences', he:'משפטים', en:'Sentences', icon:'🧩', color:'#e67e22', min:4, games:['build','hearS'], words:[]},
+  {id:'grammar', he:'דקדוק', en:'Grammar', icon:'✏️', color:'#c0392b', min:4, games:['gap'], words:[]},
+  {id:'stories', he:'סיפורים', en:'Stories', icon:'📖', color:'#16a085', min:4, games:['story'], words:[]},
 ];
 TOPICS.forEach(t => t.words = t.words.map(([en,he,emoji]) => ({en,he,emoji})));
 
@@ -202,6 +234,7 @@ const LEVELS = {
   1:{name:'קטנים', ages:'4-6', count:6,  options:3, round:6,  pairs:4},
   2:{name:'בינוניים', ages:'7-9', count:9,  options:4, round:8,  pairs:6},
   3:{name:'גדולים', ages:'10-12', count:12, options:4, round:10, pairs:6},
+  4:{name:'מומחים', ages:'12+', count:12, options:4, round:10, pairs:6},
 };
 
 const GAMES = [
@@ -212,6 +245,93 @@ const GAMES = [
   {id:'picture',   he:'מה בתמונה?',    icon:'🔤', min:2},
   {id:'spell',     he:'מאייתים',        icon:'✍️', min:2},
   {id:'translate', he:'מתרגמים',        icon:'🔁', min:3},
+  // Only inside the experts' topics (topic.games)
+  {id:'build',     he:'בונים משפט',     icon:'🧩', min:4, special:true},
+  {id:'hearS',     he:'שומעים משפט',    icon:'🎧', min:4, special:true},
+  {id:'gap',       he:'משלימים את המשפט', icon:'✏️', min:4, special:true},
+  {id:'story',     he:'קוראים סיפור',   icon:'📖', min:4, special:true},
+];
+
+// [english, hebrew, picture] – no apostrophes, words are split on spaces for the building game
+const SENTENCES = [
+  ['I have a red bike.','יש לי אופניים אדומים.','🚲'],['The cat is under the table.','החתול מתחת לשולחן.','🐱'],
+  ['My brother plays football.','אחי משחק כדורגל.','⚽'],['We go to school by bus.','אנחנו נוסעים לבית הספר באוטובוס.','🚌'],
+  ['She is reading a book.','היא קוראת ספר.','📖'],['It is raining today.','יורד גשם היום.','🌧️'],
+  ['I like pizza and ice cream.','אני אוהב פיצה וגלידה.','🍕'],['The dog is running in the park.','הכלב רץ בפארק.','🐕'],
+  ['My mother is a doctor.','אמא שלי רופאה.','🧑‍⚕️'],['There are five apples on the table.','יש חמישה תפוחים על השולחן.','🍎'],
+  ['He can swim very fast.','הוא יכול לשחות מהר מאוד.','🏊'],['They are playing basketball.','הם משחקים כדורסל.','🏀'],
+  ['I wake up at seven.','אני מתעורר בשבע.','⏰'],['The sun is hot in summer.','השמש חמה בקיץ.','☀️'],
+  ['We visited grandma yesterday.','ביקרנו את סבתא אתמול.','👵'],['Can you help me, please?','אתה יכול לעזור לי, בבקשה?','🙏'],
+  ['The bird is singing in the tree.','הציפור שרה בעץ.','🐦'],['My sister has long hair.','לאחותי יש שיער ארוך.','👧'],
+  ['The children are very happy.','הילדים שמחים מאוד.','😀'],['I drink milk every morning.','אני שותה חלב כל בוקר.','🥛'],
+  ['The plane is flying in the sky.','המטוס טס בשמיים.','✈️'],['He is wearing a blue shirt.','הוא לובש חולצה כחולה.','👕'],
+  ['We are going to the beach.','אנחנו הולכים לחוף.','🏖️'],['The elephant is bigger than the horse.','הפיל גדול יותר מהסוס.','🐘'],
+  ['I did my homework.','הכנתי את שיעורי הבית.','📝'],['Where is my phone?','איפה הטלפון שלי?','📱'],
+  ['The library is next to the bank.','הספרייה ליד הבנק.','📚'],['It is cold, so I wear a coat.','קר, אז אני לובש מעיל.','🧥'],
+  ['The cook is making a cake.','הטבח מכין עוגה.','🧑‍🍳'],['My friend lives in Tel Aviv.','החבר שלי גר בתל אביב.','🏙️'],
+].map(([en,he,emoji]) => ({en,he,emoji}));
+
+// Fill the gap: sentence with ___, the right answer first in the options.
+const GRAMMAR = [
+  ['am / is / are', 'I ___ twelve years old.', ['am','is','are'], 'אני בת/בן שתים עשרה.'],
+  ['am / is / are', 'They ___ my best friends.', ['are','is','am'], 'הם החברים הכי טובים שלי.'],
+  ['am / is / are', 'The book ___ on the table.', ['is','are','am'], 'הספר על השולחן.'],
+  ['am / is / are', 'We ___ in the classroom.', ['are','is','am'], 'אנחנו בכיתה.'],
+  ['Present Simple – הווה', 'She ___ to school every day.', ['goes','go','going'], 'היא הולכת לבית הספר כל יום.'],
+  ['Present Simple – הווה', 'He ___ like fish.', ["doesn't","don't","isn't"], 'הוא לא אוהב דגים.'],
+  ['Present Simple – הווה', '___ you like chocolate?', ['Do','Does','Are'], 'אתה אוהב שוקולד?'],
+  ['Present Simple – הווה', 'My father ___ coffee every morning.', ['drinks','drink','drinking'], 'אבא שלי שותה קפה כל בוקר.'],
+  ['Present Simple – הווה', 'They ___ football on Fridays.', ['play','plays','playing'], 'הם משחקים כדורגל בימי שישי.'],
+  ['Present Progressive – עכשיו', 'Look! The baby ___ sleeping.', ['is','are','am'], 'תראו! התינוק ישן.'],
+  ['Present Progressive – עכשיו', 'We are ___ a movie now.', ['watching','watch','watches'], 'אנחנו צופים בסרט עכשיו.'],
+  ['Past Simple – עבר', 'Yesterday I ___ my grandmother.', ['visited','visit','visits'], 'אתמול ביקרתי את סבתא שלי.'],
+  ['Past Simple – עבר', 'Last week we ___ to the beach.', ['went','go','goes'], 'בשבוע שעבר הלכנו לחוף.'],
+  ['Past Simple – עבר', 'She ___ a cake yesterday.', ['made','make','makes'], 'היא הכינה עוגה אתמול.'],
+  ['Past Simple – עבר', 'I ___ very happy yesterday.', ['was','were','am'], 'הייתי מאוד שמח אתמול.'],
+  ['Past Simple – עבר', 'They ___ at home last night.', ['were','was','is'], 'הם היו בבית אתמול בלילה.'],
+  ['Past Simple – עבר', 'Did you ___ the movie?', ['see','saw','seen'], 'ראית את הסרט?'],
+  ['Plural – רבים', 'One child, two ___.', ['children','childs','childrens'], 'ילד אחד, שני ילדים.'],
+  ['Plural – רבים', 'One box, two ___.', ['boxes','boxs','boxies'], 'קופסה אחת, שתי קופסאות.'],
+  ['Plural – רבים', 'One mouse, two ___.', ['mice','mouses','mices'], 'עכבר אחד, שני עכברים.'],
+  ['Plural – רבים', 'One tooth, many ___.', ['teeth','tooths','teeths'], 'שן אחת, הרבה שיניים.'],
+  ['Comparatives – השוואה', 'An elephant is ___ than a cat.', ['bigger','big','biggest'], 'פיל גדול יותר מחתול.'],
+  ['Comparatives – השוואה', 'Today is the ___ day of the year!', ['hottest','hot','hotter'], 'היום הוא היום הכי חם בשנה!'],
+  ['Comparatives – השוואה', 'A car is ___ than a bike.', ['faster','fast','fastest'], 'מכונית מהירה יותר מאופניים.'],
+  ['Comparatives – השוואה', 'This test is ___ than the last one.', ['easier','easy','easiest'], 'המבחן הזה קל יותר מהקודם.'],
+  ['There is / are – יש', 'There ___ three cats in the garden.', ['are','is','am'], 'יש שלושה חתולים בגינה.'],
+  ['There is / are – יש', 'There ___ a book on my desk.', ['is','are','be'], 'יש ספר על השולחן שלי.'],
+  ['can – יכול', 'Fish ___ swim, but they cannot fly.', ['can','cans','is'], 'דגים יכולים לשחות, אבל לא לעוף.'],
+  ['Prepositions – מילות יחס', 'The picture is ___ the wall.', ['on','in','under'], 'התמונה על הקיר.'],
+  ['Prepositions – מילות יחס', 'I was born ___ 2013.', ['in','on','at'], 'נולדתי ב-2013.'],
+  ['Prepositions – מילות יחס', 'See you ___ Monday!', ['on','in','at'], 'נתראה ביום שני!'],
+  ['Prepositions – מילות יחס', 'The lesson starts ___ eight.', ['at','on','in'], 'השיעור מתחיל בשמונה.'],
+  ['Question words – מילות שאלה', '___ is your name?', ['What','Where','Who'], 'מה שמך?'],
+  ['Question words – מילות שאלה', '___ do you live?', ['Where','What','When'], 'איפה אתה גר?'],
+  ['Question words – מילות שאלה', '___ old are you?', ['How','What','Who'], 'בן כמה אתה?'],
+  ['Question words – מילות שאלה', '___ is your birthday?', ['When','Who','How'], 'מתי יום ההולדת שלך?'],
+  ['Opposites – הפכים', 'The opposite of "big" is ___.', ['small','tall','long'], 'ההפך של גדול הוא קטן.'],
+  ['Opposites – הפכים', 'The opposite of "happy" is ___.', ['sad','angry','funny'], 'ההפך של שמח הוא עצוב.'],
+  ['Opposites – הפכים', 'The opposite of "fast" is ___.', ['slow','late','short'], 'ההפך של מהיר הוא איטי.'],
+  ['Opposites – הפכים', 'The opposite of "open" is ___.', ['closed','empty','dark'], 'ההפך של פתוח הוא סגור.'],
+  ['Opposites – הפכים', 'The opposite of "day" is ___.', ['night','sun','week'], 'ההפך של יום הוא לילה.'],
+  ['Pronouns – כינויים', 'This is Dana. ___ is my sister.', ['She','He','It'], 'זאת דנה. היא אחותי.'],
+  ['Pronouns – כינויים', 'That is ___ book, not yours!', ['my','me','I'], 'זה הספר שלי, לא שלך!'],
+].map(([c,s,o,he]) => ({c, s, a: o[0], o, he}));
+
+// Short stories with comprehension questions (the right answer first).
+const STORIES = [
+  {title:"Noa's Dog", emoji:'🐶', text:['Noa has a small brown dog.','His name is Max.','Every morning, Noa and Max go to the park.','Max loves to run after the ball.','One day, Max ran away!','Noa looked everywhere.','Then she found him under a big tree, sleeping.'],
+   q:[['What color is Max?',['Brown','Black','White']],['Where do Noa and Max go every morning?',['To the park','To school','To the beach']],['Where did Noa find Max?',['Under a tree','In the house','At the shop']]]},
+  {title:'The School Trip', emoji:'🚌', text:['Today the class went on a trip to the zoo.','They went by bus.','Tom saw a tall giraffe and two lions.','His friend Dana liked the monkeys best.','At lunch, they ate sandwiches next to the lake.','It was a great day!'],
+   q:[['What did the class visit?',['The zoo','The museum','The beach']],['How did they travel?',['By bus','By train','By car']],['Which animals did Dana like best?',['The monkeys','The lions','The giraffes']]]},
+  {title:'A Rainy Day', emoji:'🌧️', text:['It is Saturday, and it is raining.','Ben cannot play outside, so he is bored.','His grandfather says, "Let us bake a cake!"','They mix eggs, flour, sugar and milk.','After one hour, the cake is ready.','It is delicious, and Ben is not bored anymore.'],
+   q:[['Why can Ben not play outside?',['Because it is raining','Because he is sick','Because it is dark']],['Who bakes with Ben?',['His grandfather','His sister','His teacher']],['How does Ben feel at the end?',['Happy, not bored','Still bored','Very tired']]]},
+  {title:'The New Student', emoji:'🏫', text:['There is a new student in my class.','Her name is Maya, and she comes from Canada.','At first, Maya was shy and did not talk much.','I asked her to play basketball with us.','She is a very good player!','Now Maya and I are best friends.'],
+   q:[['Where does Maya come from?',['Canada','England','Italy']],['How was Maya at first?',['Shy','Angry','Funny']],['What game did they play?',['Basketball','Football','Tennis']]]},
+  {title:"Dad's Birthday", emoji:'🎂', text:['Tomorrow is Dad’s birthday.','My sister and I want to surprise him.','We are making a card with pictures of our family.','Mom is buying a chocolate cake.','In the evening, we will sing "Happy Birthday" and give Dad his present: a new bicycle!'],
+   q:[['Whose birthday is it tomorrow?',["Dad's","Mom's","My sister's"]],['What is Mom buying?',['A chocolate cake','A card','Flowers']],["What is Dad's present?",['A bicycle','A book','A watch']]]},
+  {title:'Space Camp', emoji:'🚀', text:['Every summer, Omer goes to space camp.','He learns about the planets and the stars.','His favorite planet is Saturn because it has beautiful rings.','This year, Omer built a small rocket with his team.','When it flew into the sky, everybody cheered.','Omer wants to be an astronaut one day.'],
+   q:[["What is Omer's favorite planet?",['Saturn','Mars','Earth']],['What did Omer build this year?',['A small rocket','A robot','A telescope']],['What does Omer want to be?',['An astronaut','A doctor','A pilot']]]},
 ];
 
 const STICKERS = ['🦄','🐉','🦖','🚀','🌈','🍦','🎈','🏆','👑','🦋','🐬','🦊','🐼','🐧','🦜','🍩','🎸','⚽','🏀','🎮',
@@ -233,7 +353,7 @@ const th = () => themeOf(cur);
 // Progress report for parents: address of the family Google Sheet (see parents-setup/README.md).
 const SYNC_URL = 'https://script.google.com/macros/s/AKfycbzvi2cl7509dBy0b4IC0lCGn7SCWp1PizncMNuVMHlSygvirVN2A8AHjBQIegaw2DdGPg/exec';
 
-const APP_VERSION = 12;
+const APP_VERSION = 13;
 
 // ---------- Helpers ----------
 const $ = s => document.querySelector(s);
@@ -289,13 +409,15 @@ function kidSummary(p){
     .sort((a,b) => (b[1][1] - b[1][0]/2) - (a[1][1] - a[1][0]/2)).slice(0, 15)
     .map(([en,v]) => ({en, he: wordHe(en), right: v[0], wrong: v[1]}));
   const topics = TOPICS.filter(t => (t.min || 1) <= p.level).map(t => {
-    const gs = gamesFor(p.level);
+    const gs = gamesFor(p.level, t);
     return {id: t.id, he: t.he, icon: t.icon, got: gs.reduce((s,g) => s + (p.best[t.id+':'+g.id] || 0), 0), max: gs.length*3};
   });
   return {id: String(p.id), name: p.name, avatar: p.avatar, level: p.level, levelName: LEVELS[p.level].name, theme: p.theme || 'normal',
     earned: p.earned, stickers: stickerCount(p), streak: streakNow(p), rounds: p.rounds,
     lastPlayed: p.log[0] ? p.log[0].d : null, minutes: Object.fromEntries(days.map(d => [d, Math.ceil(p.minutes[d])])),
-    topics, hard, log: p.log.slice(0, 20), version: APP_VERSION};
+    topics, hard, log: p.log.slice(0, 20), version: APP_VERSION,
+    // Ready for the next level: almost only 3-star games lately.
+    readyUp: p.level < 4 && p.log.length >= 12 && p.log.slice(0, 12).filter(l => l.s === 3).length >= 10};
 }
 // Send progress to the family sheet; the answer brings back the parent's goal and message.
 function syncNow(p){
@@ -440,7 +562,7 @@ function renderForm(){
     <label>בחרו דמות</label>
     <div class="avatars">${AVATARS.map(a => `<button class="av ${a===profForm.avatar?'sel':''}" onclick="profForm.avatar='${a}';renderForm()">${a}</button>`).join('')}</div>
     <label>רמה</label>
-    <div class="levels">${[1,2,3].map(l => `<button class="lv ${l==profForm.level?'sel':''}" onclick="profForm.level=${l};renderForm()">
+    <div class="levels">${[1,2,3,4].map(l => `<button class="lv ${l==profForm.level?'sel':''}" onclick="profForm.level=${l};renderForm()">
       <b>${LEVELS[l].name}</b><small>גילאי ${LEVELS[l].ages}</small></button>`).join('')}</div>
     <label>עולם</label>
     <div class="levels" style="grid-template-columns:1fr 1fr">${Object.entries(THEMES).map(([k,t]) => `<button class="lv ${k===profForm.theme?'sel':''}" onclick="profForm.theme='${k}';renderForm()">
@@ -467,10 +589,11 @@ function deleteProfile(){
   db.profiles.splice(profForm.idx, 1); save(); screenProfiles();
 }
 
-const gamesFor = lvl => GAMES.filter(g => g.min <= lvl && (!g.needsMic || canMic));
+// Experts' topics bring their own games; the word topics use the regular ones for the level.
+const gamesFor = (lvl, t) => GAMES.filter(g => t && t.games ? t.games.includes(g.id) : (!g.special && g.min <= lvl && (!g.needsMic || canMic)));
 const wordsFor = t => t.words.slice(0, LEVELS[cur.level].count);
 function topicStars(t){
-  const gs = gamesFor(cur.level);
+  const gs = gamesFor(cur.level, t);
   return {got: gs.reduce((s,g) => s + (cur.best[t.id+':'+g.id] || 0), 0), max: gs.length*3};
 }
 
@@ -529,7 +652,7 @@ function screenTopic(id){
   show(`<div class="top"><button class="btn back" onclick="screenHome()">→</button>
     <div class="who">${t.icon} ${t.he}</div><span style="width:56px"></span></div>
   <h1>מה משחקים?</h1>
-  <div class="grid">${gamesFor(cur.level).map(g => `
+  <div class="grid">${gamesFor(cur.level, t).map(g => `
     <button class="card" onclick="startGame('${t.id}','${g.id}')">
       <div class="ico">${g.icon}</div><div class="lbl">${g.he}</div>
       <div>${starsHtml(cur.best[t.id+':'+g.id] || 0)}</div></button>`).join('')}
@@ -549,7 +672,8 @@ function screenStickers(){
 function startGame(topicId, gameId){
   const topic = TOPICS.find(t => t.id === topicId);
   game = {topic, id: gameId, words: wordsFor(topic), i: 0, mistakes: 0, total: 0, t0: Date.now()};
-  ({learn: learnNew, listen: quizNew, picture: quizNew, translate: quizNew, memory: memoryNew, speak: speakNew, spell: spellNew})[gameId]();
+  ({learn: learnNew, listen: quizNew, picture: quizNew, translate: quizNew, memory: memoryNew, speak: speakNew, spell: spellNew,
+    build: buildNew, hearS: hearNew, gap: gapNew, story: storyNew})[gameId]();
 }
 function quitGame(){ const t = game.topic.id; if (game.stopRec) game.stopRec('quit'); game = null; if (window.speechSynthesis) speechSynthesis.cancel(); screenTopic(t); }
 function gameTop(){
@@ -887,10 +1011,132 @@ function spellTap(k){
   }
 }
 
+// 6) Experts: build a sentence from its words
+function buildNew(){ game.list = sample(SENTENCES, 6); game.total = game.list.length; buildSetup(); }
+function buildSetup(){
+  const s = game.list[game.i];
+  game.target = s.en.split(' ');
+  game.tiles = shuffle(game.target.map(w => ({w, used: false})));
+  game.pos = 0; game.locked = false; game.qWrong = false;
+  buildRender();
+}
+function buildRender(){
+  const s = game.list[game.i];
+  show(gameTop() + `<div class="q"><div class="big-emoji sm">${s.emoji}</div><div class="he">${esc(s.he)}</div>
+    <button class="btn small" onclick="say(game.list[game.i].en)">🔊 שמיעה</button></div>
+  <div class="sent en">${game.target.map((w,k) => `<span class="sw ${k < game.pos ? 'f' : ''}">${k < game.pos ? esc(w) : '&nbsp;'}</span>`).join('')}</div>
+  <div class="tiles en">${game.tiles.map((t,k) => `<button class="tile wt" id="t${k}" ${t.used ? 'disabled' : ''} onclick="buildTap(${k})">${esc(t.w)}</button>`).join('')}</div>`);
+}
+function buildTap(k){
+  const t = game.tiles[k];
+  if (t.used || game.locked) return;
+  if (t.w === game.target[game.pos]){
+    t.used = true; game.pos++;
+    if (game.pos === game.target.length){
+      game.locked = true; buildRender(); sfx.ok();
+      later(() => say(game.list[game.i].en), 250);
+      later(() => { game.i++; game.i >= game.total ? finish() : buildSetup(); }, 2400);
+    } else { tone([720], 0.06); buildRender(); }
+  } else {
+    game.mistakes++; sfx.bad();
+    const el = $('#t'+k); el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake');
+  }
+}
+
+// 7) Experts: hear a sentence, choose its picture
+function hearNew(){ game.list = sample(SENTENCES, 8); game.total = game.list.length; hearRender(); }
+function hearRender(){
+  const s = game.list[game.i];
+  if (!game.opts) game.opts = shuffle([s, ...sample(SENTENCES.filter(x => x !== s && x.emoji !== s.emoji), 3)]);
+  game.locked = false;
+  show(gameTop() + `<div class="q"><button class="speaker" onclick="say(game.list[game.i].en)">🔊</button>
+    <div class="hint">הקשיבו למשפט ובחרו את התמונה</div><div id="reveal" class="reveal"></div></div>
+  <div class="opts pics n4">${game.opts.map((o,k) => `<button class="opt" id="o${k}" onclick="hearPick(${k})">${o.emoji}</button>`).join('')}</div>`);
+  later(() => say(s.en), 350);
+}
+function hearPick(k){
+  if (game.locked) return;
+  const s = game.list[game.i], el = $('#o'+k);
+  if (game.opts[k] === s){
+    game.locked = true; el.classList.add('right'); sfx.ok();
+    $('#reveal').innerHTML = `<div class="en">${esc(s.en)}</div><div>${esc(s.he)}</div>`;
+    later(() => say(s.en), 300);
+    later(() => { game.i++; game.opts = null; game.i >= game.total ? finish() : hearRender(); }, 2600);
+  } else {
+    el.classList.add('wrong'); el.disabled = true; game.mistakes++; sfx.bad();
+    later(() => say(s.en), 600);
+  }
+}
+
+// 8) Experts: grammar – fill the gap
+function gapNew(){ game.list = sample(GRAMMAR, 10); game.total = game.list.length; gapRender(); }
+function gapRender(){
+  const q = game.list[game.i];
+  if (!game.opts) game.opts = shuffle(q.o);
+  game.locked = false;
+  show(gameTop() + `<div class="q"><span class="tag">${esc(q.c)}</span>
+    <div class="gap en" id="gapS">${esc(q.s).replace('___', '<span class="blank">___</span>')}</div><div id="reveal" class="reveal"></div></div>
+  <div class="opts words n${game.opts.length}">${game.opts.map((o,k) => `<button class="opt" id="o${k}" onclick="gapPick(${k})"><span class="en">${esc(o)}</span></button>`).join('')}</div>`);
+}
+function gapPick(k){
+  if (game.locked) return;
+  const q = game.list[game.i], el = $('#o'+k);
+  if (game.opts[k] === q.a){
+    game.locked = true; el.classList.add('right'); sfx.ok();
+    const full = q.s.replace('___', q.a);
+    $('#gapS').innerHTML = esc(q.s).replace('___', `<span class="blank ok">${esc(q.a)}</span>`);
+    $('#reveal').textContent = q.he;
+    later(() => say(full), 300);
+    later(() => { game.i++; game.opts = null; game.i >= game.total ? finish() : gapRender(); }, 2400);
+  } else {
+    el.classList.add('wrong'); el.disabled = true; game.mistakes++; sfx.bad();
+  }
+}
+
+// 9) Experts: read a short story, answer questions
+function storyNew(){
+  ensureTrack(cur);
+  cur.storySeen = cur.storySeen || [];
+  const fresh = STORIES.filter(s => !cur.storySeen.includes(s.title));
+  game.story = sample(fresh.length ? fresh : STORIES, 1)[0];
+  cur.storySeen = [...cur.storySeen.filter(t => t !== game.story.title), game.story.title].slice(-(STORIES.length - 1));
+  save();
+  game.list = game.story.q; game.total = game.list.length; game.reading = true;
+  storyRender();
+}
+function storyText(){ return game.story.text.map(esc).join(' '); }
+function storyRender(){
+  const st = game.story;
+  if (game.reading){
+    show(gameTop() + `<div class="story"><div class="st-h">${st.emoji} <span class="en">${esc(st.title)}</span></div>
+      <div class="en st-t">${storyText()}</div>
+      <button class="btn small" onclick="say(game.story.text.join(' '), 0.85)">🔊 הקראה</button></div>
+      <button class="btn primary big" onclick="game.reading=false;storyRender()">קראתי! לשאלות ←</button>`);
+    return;
+  }
+  const [qq, ans] = game.list[game.i];
+  if (!game.opts) game.opts = shuffle(ans);
+  game.locked = false;
+  show(gameTop() + `<details class="story"><summary>📖 הסיפור (לחצו כדי לקרוא שוב)</summary><div class="en st-t">${storyText()}</div></details>
+    <div class="q"><div class="gap en">${esc(qq)}</div></div>
+    <div class="opts one">${game.opts.map((o,k) => `<button class="opt" id="o${k}" onclick="storyPick(${k})"><span class="en">${esc(o)}</span></button>`).join('')}</div>`);
+  later(() => say(qq), 300);
+}
+function storyPick(k){
+  if (game.locked) return;
+  const [, ans] = game.list[game.i], el = $('#o'+k);
+  if (game.opts[k] === ans[0]){
+    game.locked = true; el.classList.add('right'); sfx.ok();
+    later(() => { game.i++; game.opts = null; game.i >= game.total ? finish() : storyRender(); }, 1300);
+  } else {
+    el.classList.add('wrong'); el.disabled = true; game.mistakes++; sfx.bad();
+  }
+}
+
 // ---------- Result ----------
 function calcStars(){
   const m = game.mistakes, t = game.total;
-  const [a,b] = {memory:[t, 2*t], spell:[2, t+2], speak:[1, t]}[game.id] || [Math.floor(t/6), Math.ceil(t/2)];
+  const [a,b] = {memory:[t, 2*t], spell:[2, t+2], build:[2, t+2], speak:[1, t]}[game.id] || [Math.floor(t/6), Math.ceil(t/2)];
   return m <= a ? 3 : m <= b ? 2 : 1;
 }
 function finish(stars){
