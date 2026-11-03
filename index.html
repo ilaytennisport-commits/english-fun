@@ -535,20 +535,28 @@ function modelStored(){
     } catch(e){ ok(false); }
   });
 }
-// First time only: download with a progress bar. Vosk then reads the same file from the browser cache.
+// First time only: download with a progress bar and hand the file to the engine through the
+// offline cache (sw.js serves it from there), so it isn't downloaded twice.
+const MODEL_CACHE = 'english-fun-model';
 async function prefetchModel(){
-  const res = await fetch(MODEL_URL);
+  const res = await fetch(MODEL_URL, {cache: 'no-store'});
   if (!res.ok) throw new Error('model ' + res.status);
-  if (!res.body) return;
   const total = +res.headers.get('content-length') || MODEL_SIZE;
-  const rd = res.body.getReader(); let got = 0, last = -1;
-  for (;;){
-    const {done, value} = await rd.read();
-    if (done) break;
-    got += value.length;
-    const p = Math.min(99, Math.floor(got * 100 / total));
-    if (p !== last){ last = p; voskOnProgress && voskOnProgress(p); }
-  }
+  const chunks = []; let got = 0, last = -1;
+  if (res.body){
+    const rd = res.body.getReader();
+    for (;;){
+      const {done, value} = await rd.read();
+      if (done) break;
+      chunks.push(value); got += value.length;
+      const p = Math.min(99, Math.floor(got * 100 / total));
+      if (p !== last){ last = p; voskOnProgress && voskOnProgress(p); }
+    }
+  } else chunks.push(new Uint8Array(await res.arrayBuffer()));
+  try {
+    const c = await caches.open(MODEL_CACHE);
+    await c.put(MODEL_URL, new Response(new Blob(chunks, {type: 'application/gzip'}), {headers: {'Content-Type': 'application/gzip'}}));
+  } catch(e){}
 }
 function loadVosk(onProgress){
   voskOnProgress = onProgress;
@@ -561,6 +569,7 @@ function loadVosk(onProgress){
       new Promise((_, bad) => setTimeout(() => bad(new Error('model timeout')), 120000)),
     ]);
     voskModel = model;
+    if (window.caches) caches.delete(MODEL_CACHE).catch(() => {});   // the engine keeps its own copy now
     return model;
   })().catch(e => { voskLoading = null; throw e; });
   return voskLoading;
