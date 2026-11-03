@@ -509,7 +509,8 @@ function memFlip(k){
 // 4) Speaking – our own speech recognition (Vosk, open source) running inside the phone.
 // No Google/Apple service needed, so it works in every browser and offline after the first download.
 const canMic = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.WebAssembly && (window.AudioContext || window.webkitAudioContext));
-const MODEL_URL = 'models/en-small.tar.gz';   // ~40MB, downloaded once and then kept on the phone
+// Full address: the engine's worker can't resolve paths relative to the app's folder.
+const MODEL_URL = new URL('models/en-small.tar.gz', location.href).href;   // ~40MB, downloaded once, then kept on the phone
 const MODEL_SIZE = 41184862;
 let voskModel = null, voskLoading = null, voskOnProgress = null, micCtx = null;
 
