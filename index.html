@@ -300,7 +300,26 @@ function screenProfiles(){
       <div class="ico">${p.avatar}</div><div class="lbl">${esc(p.name)}</div>
       <div class="sub">⭐ ${p.earned} · ${LEVELS[p.level].name}</div></button>`).join('')}
     <button class="card add" onclick="screenProfileForm()"><div class="ico">➕</div><div class="lbl">ילד/ה חדש/ה</div></button>
-  </div>`);
+  </div>${installBox()}`);
+}
+
+// ---------- Install as an app ----------
+let installEvt = null;
+const isStandalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; if (!cur) screenProfiles(); });
+window.addEventListener('appinstalled', () => { installEvt = null; if (!cur) screenProfiles(); });
+function installBox(){
+  if (isStandalone()) return '';
+  if (installEvt) return `<div class="note"><button class="btn primary" onclick="installApp()">📲 התקנת האפליקציה בטלפון</button></div>`;
+  if (isIOS) return `<div class="note">📲 להתקנה באייפון: לחצו על <b>שיתוף</b> <span style="font-size:22px">⎋</span> ואז <b>"הוספה למסך הבית"</b></div>`;
+  return '';
+}
+async function installApp(){
+  if (!installEvt) return;
+  installEvt.prompt();
+  await installEvt.userChoice;
+  installEvt = null; screenProfiles();
 }
 function pickProfile(i){ cur = db.profiles[i]; say('Hello ' + cur.name.replace(/[^a-zA-Z ]/g,'')); screenHome(); }
 
@@ -619,7 +638,7 @@ function finish(stars){
 }
 
 // ---------- Start ----------
-if (db.profiles.length === 1){ cur = db.profiles[0]; screenHome(); } else screenProfiles();
+if (db.profiles.length === 1 && isStandalone()){ cur = db.profiles[0]; screenHome(); } else screenProfiles();
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')){
   navigator.serviceWorker.register('sw.js').catch(() => {});
 }
