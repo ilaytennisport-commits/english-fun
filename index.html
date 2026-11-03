@@ -304,44 +304,44 @@ function screenProfiles(){
 }
 function pickProfile(i){ cur = db.profiles[i]; say('Hello ' + cur.name.replace(/[^a-zA-Z ]/g,'')); screenHome(); }
 
-let form = {};
+let profForm = {};
 function screenProfileForm(idx){
   const p = idx != null ? db.profiles[idx] : null;
-  form = {idx, name: p ? p.name : '', avatar: p ? p.avatar : AVATARS[0], level: p ? p.level : 1};
+  profForm = {idx, name: p ? p.name : '', avatar: p ? p.avatar : AVATARS[0], level: p ? p.level : 1};
   renderForm();
 }
 function renderForm(){
-  const editing = form.idx != null;
+  const editing = profForm.idx != null;
   show(`<div class="top"><button class="btn back" onclick="${editing ? 'screenHome()' : 'screenProfiles()'}">→</button><span></span></div>
   <h1>${editing ? 'הגדרות' : 'ילד/ה חדש/ה'}</h1>
   <div class="panel">
     <label>שם</label>
-    <input id="nm" value="${esc(form.name)}" maxlength="15" placeholder="איך קוראים לך?" oninput="form.name=this.value">
+    <input id="nm" value="${esc(profForm.name)}" maxlength="15" placeholder="איך קוראים לך?" oninput="profForm.name=this.value">
     <label>בחרו דמות</label>
-    <div class="avatars">${AVATARS.map(a => `<button class="av ${a===form.avatar?'sel':''}" onclick="form.avatar='${a}';renderForm()">${a}</button>`).join('')}</div>
+    <div class="avatars">${AVATARS.map(a => `<button class="av ${a===profForm.avatar?'sel':''}" onclick="profForm.avatar='${a}';renderForm()">${a}</button>`).join('')}</div>
     <label>רמה</label>
-    <div class="levels">${[1,2,3].map(l => `<button class="lv ${l==form.level?'sel':''}" onclick="form.level=${l};renderForm()">
+    <div class="levels">${[1,2,3].map(l => `<button class="lv ${l==profForm.level?'sel':''}" onclick="profForm.level=${l};renderForm()">
       <b>${LEVELS[l].name}</b><small>גילאי ${LEVELS[l].ages}</small></button>`).join('')}</div>
     <button class="btn primary big" onclick="saveProfile()">שמירה ✔</button>
     ${editing ? `<button class="btn danger" onclick="deleteProfile()">מחיקת הפרופיל</button>` : ''}
   </div>`);
 }
 function saveProfile(){
-  const name = form.name.trim();
+  const name = profForm.name.trim();
   if (!name){ $('#nm').focus(); $('#nm').classList.add('shake'); return; }
-  if (form.idx != null){
-    Object.assign(db.profiles[form.idx], {name, avatar: form.avatar, level: form.level});
-    cur = db.profiles[form.idx];
+  if (profForm.idx != null){
+    Object.assign(db.profiles[profForm.idx], {name, avatar: profForm.avatar, level: profForm.level});
+    cur = db.profiles[profForm.idx];
   } else {
-    cur = {id: Date.now(), name, avatar: form.avatar, level: form.level, best: {}, earned: 0, streak: {count:0, last:''}};
+    cur = {id: Date.now(), name, avatar: profForm.avatar, level: profForm.level, best: {}, earned: 0, streak: {count:0, last:''}};
     db.profiles.push(cur);
   }
   save(); screenHome();
 }
 function deleteProfile(){
-  const p = db.profiles[form.idx];
+  const p = db.profiles[profForm.idx];
   if (!confirm(`למחוק את ${p.name} וכל ההתקדמות?`)) return;
-  db.profiles.splice(form.idx, 1); save(); screenProfiles();
+  db.profiles.splice(profForm.idx, 1); save(); screenProfiles();
 }
 
 const gamesFor = lvl => GAMES.filter(g => g.min <= lvl && (!g.needsMic || SR));
