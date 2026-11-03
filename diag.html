@@ -155,7 +155,7 @@ function verdict(){
   if (results.perm === 'denied' || /שגיאה/.test(results.mic || '')) tips.push('❗ המיקרופון חסום. הגדרות הטלפון ← אפליקציות ← Chrome ← הרשאות ← מיקרופון ← לאפשר.');
   if (/^עוצמה/.test(results.mic || '') && parseInt(results.mic.split(' ')[1]) <= 8) tips.push('❗ המיקרופון לא קולט קול – אולי משהו מכסה אותו או שאוזניות בלוטות\' מחוברות.');
   const en = results['en-US'] || '', he = results['he-IL'] || '';
-  if (/timeout/.test(en) && !/audiostart/.test(en)) tips.push('❗ שירות זיהוי הדיבור של גוגל לא עונה. בדקו ש<b>"Google"</b> ו<b>"Speech Services by Google"</b> מותקנות ומעודכנות בחנות Play.');
+  if (/timeout/.test(en) && !/audiostart/.test(en)) tips.push('❗ שירות זיהוי הדיבור של גוגל לא מקבל קול. בדקו:<br>1. הגדרות ← אפליקציות ← <b>Google</b> ← הרשאות ← <b>מיקרופון ← לאפשר</b>.<br>2. שאפליקציית <b>Google</b> מופעלת (לא "מושבתת") ומעודכנת בחנות Play.<br>3. שמותקנת ומעודכנת <b>"Speech Services by Google"</b> בחנות Play.<br>4. בדיקה: במקלדת לחצו על סמל המיקרופון 🎤 ונסו להכתיב. אם גם שם לא עובד – הבעיה בשירות של גוגל בטלפון.');
   if (/network/.test(en)) tips.push('❗ זיהוי הדיבור צריך אינטרנט – בדקו חיבור.');
   if (/language-not-supported/.test(en)) tips.push('❗ אין בטלפון זיהוי לאנגלית. Chrome ← הגדרות ← שפות, הוסיפו English.');
   if (/^שמע/.test(he) && !/^שמע/.test(en) && en) tips.push('❗ עברית עובדת אבל אנגלית לא – צריך להוסיף אנגלית לזיהוי הדיבור של גוגל (הגדרות ← Google ← הקלדה קולית ← שפות).');
