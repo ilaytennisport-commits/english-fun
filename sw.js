@@ -1,5 +1,5 @@
 // Offline support: the app works without internet after the first visit.
-const CACHE = 'english-fun-v10';
+const CACHE = 'english-fun-v11';
 const MODEL_CACHE = 'english-fun-model';   // filled by the app during the first download
 const FILES = ['./', './index.html', './manifest.json', './icon.svg', './icon-192.png', './icon-512.png'];
 
