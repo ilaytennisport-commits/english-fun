@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&family=Rubik:wght@500;700;800&display=swap" rel="stylesheet">
-<title>English Fun – אנגלית בכיף</title>
+<title>בית הספר לאנגלית של משפחת כהן</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;min-height:100%}
@@ -21,6 +21,10 @@ body{font-family:'Rubik',system-ui,sans-serif;background:linear-gradient(160deg,
 #app{max-width:860px;margin:0 auto;padding:max(14px,env(safe-area-inset-top)) 14px 40px}
 .en{direction:ltr;unicode-bidi:isolate;font-family:'Fredoka','Rubik',sans-serif}
 h1{color:#fff;text-shadow:0 3px 0 rgba(0,0,0,.15);text-align:center;font-size:clamp(26px,6vw,38px);margin:6px 0 16px;font-weight:800}
+.welcome{background:#fff;border-radius:28px;padding:18px 14px;margin:6px 0 18px;text-align:center;box-shadow:0 7px 0 rgba(0,0,0,.12);animation:pop .6s}
+.welcome-top{font-size:clamp(24px,6vw,32px);font-weight:800;color:#e84393}
+.welcome-main{font-size:clamp(26px,7vw,40px);font-weight:800;color:#6c5ce7;line-height:1.25;margin:4px 0}
+.welcome-en{font-size:clamp(14px,3.6vw,18px);color:#636e72}
 .subtitle{text-align:center;color:#fff;font-size:22px;margin:-6px 0 18px;font-weight:700}
 .top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
 .who{font-size:24px;font-weight:800;color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.15)}
@@ -294,7 +298,12 @@ function confetti(n){
 // ---------- Screens ----------
 function screenProfiles(){
   cur = null; game = null;
-  show(`<h1>🎈 English Fun 🎈</h1><div class="subtitle">מי משחק היום?</div>
+  show(`<div class="welcome">
+    <div class="welcome-top">🎈 ברוכים הבאים 🎈</div>
+    <div class="welcome-main">לבית הספר לאנגלית<br>של משפחת כהן</div>
+    <div class="welcome-en en">Welcome to the Cohen Family English School</div>
+  </div>
+  <div class="subtitle">מי משחק היום?</div>
   <div class="grid">
     ${db.profiles.map((p,i) => `<button class="card" onclick="pickProfile(${i})">
       <div class="ico">${p.avatar}</div><div class="lbl">${esc(p.name)}</div>
