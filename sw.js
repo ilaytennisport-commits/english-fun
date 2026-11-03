@@ -1,5 +1,5 @@
 // Offline support: the app works without internet after the first visit.
-const CACHE = 'english-fun-v6';
+const CACHE = 'english-fun-v7';
 const FILES = ['./', './index.html', './manifest.json', './icon.svg', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
@@ -12,6 +12,8 @@ self.addEventListener('activate', e => {
 });
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
+  // The speech model (40MB) is stored by the speech engine itself – don't keep a second copy here.
+  if (e.request.url.includes('/models/')) return;
   const keep = res => {
     if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(e.request, copy)); }
     return res;

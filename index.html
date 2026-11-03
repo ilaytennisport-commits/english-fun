@@ -99,6 +99,8 @@ button.pill{cursor:pointer;box-shadow:0 4px 0 rgba(0,0,0,.12)}
 .center{text-align:center}
 .mic{font-size:70px;width:140px;height:140px;border-radius:50%;border:none;background:#ff7675;box-shadow:0 8px 0 rgba(0,0,0,.15);cursor:pointer;margin:10px 0}
 .mic.on{background:#00b894;animation:pulse 1s infinite}
+.vol{height:14px;width:220px;max-width:70%;margin:0 auto 10px;background:rgba(255,255,255,.5);border-radius:99px;overflow:hidden}
+.vol>div{height:100%;width:0;background:#00b894;transition:width .08s}
 .msg{font-size:22px;font-weight:800;color:#fff;min-height:34px;margin-bottom:10px;text-shadow:0 2px 0 rgba(0,0,0,.15)}
 .msg.good{color:#fff;background:#00b894;display:inline-block;padding:6px 18px;border-radius:99px}
 .result{text-align:center;padding-top:30px}
@@ -259,26 +261,6 @@ function say(text, rate){
   speechSynthesis.speak(u);
 }
 
-const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-const NUMS = {one:'1',two:'2',three:'3',four:'4',five:'5',six:'6',seven:'7',eight:'8',nine:'9',ten:'10'};
-const ALIKE = {two:['to','too'],four:['for'],one:['won'],eight:['ate'],eye:['i','aye'],sun:['son'],sea:['see','c'],ear:['year'],
-  read:['red'],red:['read'],mom:['mum','mam','mommy'],dad:['daddy'],hair:['here'],pants:['pans'],bike:['bite'],write:['right','rite'],cry:['crying']};
-function lev(a,b){
-  const d = Array.from({length:a.length+1}, (_,i) => [i]);
-  for (let j=1;j<=b.length;j++) d[0][j] = j;
-  for (let i=1;i<=a.length;i++) for (let j=1;j<=b.length;j++)
-    d[i][j] = Math.min(d[i-1][j]+1, d[i][j-1]+1, d[i-1][j-1] + (a[i-1]===b[j-1]?0:1));
-  return d[a.length][b.length];
-}
-function heardOk(word, alts){
-  const targets = [word, NUMS[word], ...(ALIKE[word]||[])].filter(Boolean);
-  return alts.some(a => {
-    const toks = a.toLowerCase().replace(/[^a-z0-9 ]/g,' ').split(/\s+/).filter(Boolean);
-    if (toks.join('') === word) return true;
-    return toks.some(t => targets.includes(t) || t === word+'s' || (word.length >= 4 && lev(t, word) <= (word.length >= 7 ? 2 : 1)));
-  });
-}
-
 // run fn later only if the same game is still on screen
 function later(fn, ms){ const g = game; setTimeout(() => { if (game === g) fn(); }, ms); }
 
@@ -318,12 +300,7 @@ const isStandalone = () => matchMedia('(display-mode: standalone)').matches || n
 const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; if (!cur) screenProfiles(); });
 window.addEventListener('appinstalled', () => { installEvt = null; if (!cur) screenProfiles(); });
-// Opens this same page in Chrome on Android (or its Play Store page if Chrome is missing).
-const chromeUrl = () => `intent://${location.host}${location.pathname}#Intent;scheme=https;package=com.android.chrome;end`;
-const chromeBtn = () => /android/i.test(navigator.userAgent) && location.protocol === 'https:'
-  ? `<a class="btn primary small" style="text-decoration:none;display:inline-block;margin-top:8px" href="${chromeUrl()}">🌐 פתיחה ב-Chrome</a>` : '';
 function installBox(){
-  if (badMicBrowser) return `<div class="note">🎤 בדפדפן הזה משחק המיקרופון לא עובד.<br>כדאי לפתוח את האפליקציה ב-<b>Chrome</b> ולהתקין משם.<br>${chromeBtn()}</div>`;
   if (isStandalone()) return '';
   if (installEvt) return `<div class="note"><button class="btn primary" onclick="installApp()">📲 התקנת האפליקציה בטלפון</button></div>`;
   if (isIOS) return `<div class="note">📲 להתקנה באייפון: לחצו על <b>שיתוף</b> <span style="font-size:22px">⎋</span> ואז <b>"הוספה למסך הבית"</b></div>`;
@@ -377,7 +354,7 @@ function deleteProfile(){
   db.profiles.splice(profForm.idx, 1); save(); screenProfiles();
 }
 
-const gamesFor = lvl => GAMES.filter(g => g.min <= lvl && (!g.needsMic || SR));
+const gamesFor = lvl => GAMES.filter(g => g.min <= lvl && (!g.needsMic || canMic));
 const wordsFor = t => t.words.slice(0, LEVELS[cur.level].count);
 function topicStars(t){
   const gs = gamesFor(cur.level);
@@ -434,7 +411,7 @@ function startGame(topicId, gameId){
   game = {topic, id: gameId, words: wordsFor(topic), i: 0, mistakes: 0, total: 0};
   ({learn: learnNew, listen: quizNew, picture: quizNew, translate: quizNew, memory: memoryNew, speak: speakNew, spell: spellNew})[gameId]();
 }
-function quitGame(){ const t = game.topic.id; game = null; if (window.speechSynthesis) speechSynthesis.cancel(); screenTopic(t); }
+function quitGame(){ const t = game.topic.id; if (game.stopRec) game.stopRec('quit'); game = null; if (window.speechSynthesis) speechSynthesis.cancel(); screenTopic(t); }
 function gameTop(){
   const pct = Math.round(100 * game.i / game.total);
   return `<div class="top"><button class="btn back" onclick="quitGame()">✖</button>
@@ -529,10 +506,83 @@ function memFlip(k){
   }
 }
 
-// 4) Speaking
+// 4) Speaking – our own speech recognition (Vosk, open source) running inside the phone.
+// No Google/Apple service needed, so it works in every browser and offline after the first download.
+const canMic = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.WebAssembly && (window.AudioContext || window.webkitAudioContext));
+const MODEL_URL = 'models/en-small.tar.gz';   // ~40MB, downloaded once and then kept on the phone
+const MODEL_SIZE = 41184862;
+let voskModel = null, voskLoading = null, voskOnProgress = null, micCtx = null;
+
+function loadScript(src){
+  return new Promise((ok, bad) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => bad(new Error('script')); document.head.appendChild(s); });
+}
+// Vosk unpacks the model into IndexedDB "/vosk" and marks it with "extracted.ok".
+function modelStored(){
+  return new Promise(ok => {
+    try {
+      const r = indexedDB.open('/vosk');
+      r.onupgradeneeded = () => r.transaction.abort();   // not there yet – don't create it
+      r.onerror = () => ok(false);
+      r.onsuccess = () => {
+        const db = r.result;
+        try {
+          const q = db.transaction('FILE_DATA').objectStore('FILE_DATA').getAllKeys();
+          q.onsuccess = () => { ok(q.result.some(k => String(k).endsWith('/extracted.ok'))); db.close(); };
+          q.onerror = () => { ok(false); db.close(); };
+        } catch(e){ ok(false); db.close(); }
+      };
+    } catch(e){ ok(false); }
+  });
+}
+// First time only: download with a progress bar. Vosk then reads the same file from the browser cache.
+async function prefetchModel(){
+  const res = await fetch(MODEL_URL);
+  if (!res.ok) throw new Error('model ' + res.status);
+  if (!res.body) return;
+  const total = +res.headers.get('content-length') || MODEL_SIZE;
+  const rd = res.body.getReader(); let got = 0, last = -1;
+  for (;;){
+    const {done, value} = await rd.read();
+    if (done) break;
+    got += value.length;
+    const p = Math.min(99, Math.floor(got * 100 / total));
+    if (p !== last){ last = p; voskOnProgress && voskOnProgress(p); }
+  }
+}
+function loadVosk(onProgress){
+  voskOnProgress = onProgress;
+  if (!voskLoading) voskLoading = (async () => {
+    if (!window.Vosk) await loadScript('vendor/vosk.js');
+    if (!(await modelStored())) await prefetchModel();
+    voskOnProgress && voskOnProgress(100);
+    const model = await Promise.race([
+      Vosk.createModel(MODEL_URL, -1),
+      new Promise((_, bad) => setTimeout(() => bad(new Error('model timeout')), 120000)),
+    ]);
+    voskModel = model;
+    return model;
+  })().catch(e => { voskLoading = null; throw e; });
+  return voskLoading;
+}
+
 function speakNew(){
   game.list = sample(game.words, Math.min(5, game.words.length));
-  game.total = game.list.length; game.tries = 0; speakRender();
+  game.total = game.list.length; game.tries = 0;
+  speakPrepare();
+}
+function speakPrepare(){
+  if (voskModel) return speakRender();
+  const g = game;
+  speakLoading(0);
+  loadVosk(p => { if (game === g) speakLoading(p); })
+    .then(() => { if (game === g) speakRender(); })
+    .catch(() => { if (game === g) speakRender('לא הצלחתי להוריד את זיהוי הקול 📶 בדקו את האינטרנט ונסו שוב, או תגידו בקול ולחצו "אמרתי!"'); });
+}
+function speakLoading(p){
+  show(gameTop() + `<div class="q"><div class="big-emoji sm">🎤</div>
+    <div class="hint">${p < 100 ? 'מוריד את זיהוי הקול...' : 'כמעט מוכן...'}</div>
+    <div class="bar" style="height:26px;margin:16px 6px"><div style="width:${p}%"></div></div>
+    <div class="hint" style="font-size:17px">${p < 100 ? `${p}% · רק בפעם הראשונה (40MB, עדיף ב-WiFi)` : 'עוד כמה שניות'}</div></div>`);
 }
 function speakRender(msg, good){
   const w = game.list[game.i];
@@ -540,77 +590,82 @@ function speakRender(msg, good){
     <div class="big-emoji sm">${w.emoji}</div><div class="word en">${w.en}</div><div class="he">${w.he}</div>
     <button class="btn small" onclick="say(game.list[game.i].en)">🔊 איך אומרים?</button></div>
   <div class="center">
-    <button class="mic ${game.rec ? 'on' : ''}" onclick="speakGo()">🎤</button>
-    <div><span class="msg ${good ? 'good' : ''}">${msg || (badMicBrowser ? 'תגידו את המילה בקול ולחצו "אמרתי!"' + micHelp() : 'לחצו על המיקרופון ותגידו את המילה')}</span></div>
-    ${game.rec ? '' : `<div class="row" style="margin-top:6px">
-      ${micBroken || game.tries >= 1 ? `<button class="btn small primary" onclick="speakSaidIt()">✅ אמרתי!</button>` : ''}
+    ${voskModel ? `<button class="mic ${game.rec ? 'on' : ''}" onclick="speakGo()">🎤</button>` : ''}
+    ${game.rec ? '<div class="vol"><div id="lvl"></div></div>' : ''}
+    <div><span class="msg ${good ? 'good' : ''}">${msg || 'לחצו על המיקרופון ותגידו את המילה'}</span></div>
+    ${game.rec || game.locked ? '' : `<div class="row" style="margin-top:6px">
+      ${!voskModel || game.tries >= 1 ? `<button class="btn small primary" onclick="speakSaidIt()">✅ אמרתי!</button>` : ''}
+      ${!voskModel ? `<button class="btn small" onclick="speakPrepare()">🔄 לנסות שוב</button>` : ''}
       ${game.tries >= 2 ? `<button class="btn small" onclick="speakNext()">דלג ⏭</button>` : ''}
     </div>`}
   </div>`);
 }
-// Set when the phone's speech recognition never answers (common in iPhone home-screen apps).
-let recog = null;
-const UA = navigator.userAgent;
-// Browsers where the speech API exists but never works: in-app browsers (WebView) and Samsung/Xiaomi/Firefox browsers.
-const badMicBrowser = /; wv\)|FBAN|FBAV|Instagram|SamsungBrowser|MiuiBrowser|Firefox/i.test(UA);
-let micBroken = badMicBrowser;
-const micHelp = () => `<div style="margin-top:8px">${badMicBrowser
-  ? `<div class="note" style="margin:6px 0">💡 בדפדפן הזה המיקרופון לא עובד. פתחו את האפליקציה ב-<b>Chrome</b> והתקינו משם.<br>${chromeBtn()}</div>` : ''}
-  <a class="btn small" style="text-decoration:none;display:inline-block" href="diag.html">🔧 בדיקת מיקרופון</a></div>`;
-function speakGo(attempt){
-  attempt = attempt || 0;
-  if (game.locked) return;
-  if (game.rec){ try { recog.stop(); } catch(e){} return; }  // tap again = stop listening
-  // If a word is still being read aloud, stop it and give the audio a moment to free the mic.
-  if (window.speechSynthesis && (speechSynthesis.speaking || speechSynthesis.pending)){
-    speechSynthesis.cancel(); game.rec = true; speakRender('רגע... מכין את המיקרופון 🎤');
-    return later(() => { game.rec = false; speakGo(attempt); }, 400);
-  }
+const setMsg = h => { const m = document.querySelector('.msg'); if (m) m.innerHTML = h; };
+
+async function speakGo(){
+  if (game.locked || !voskModel) return;
+  if (game.rec){ if (game.stopRec) game.stopRec('user'); return; }   // tap again = stop
   const g = game, w = game.list[game.i];
-  let r;
-  try { r = recog = new SR(); } catch(e){ micBroken = true; return speakRender('המיקרופון לא זמין במכשיר הזה – תגידו בקול ולחצו "אמרתי!"' + micHelp()); }
-  r.lang = 'en-US'; r.maxAlternatives = 5; r.interimResults = true; r.continuous = false;
-  let done = false, gotAudio = false, alts = [], timer = null;
-  const log = [];  // event names, shown small so we can see why it didn't hear
-  const arm = ms => { clearTimeout(timer); timer = setTimeout(() => { log.push('timeout'); try { r.abort(); } catch(e){} end(alts, 'timeout'); }, ms); };
-  arm(8000);  // waiting for the mic to start
-  const code = () => `<div style="font-size:12px;opacity:.6;margin-top:4px" class="en">${esc(log.join(' › '))}</div>`;
-  const end = (heard, err) => {
-    if (done) return; done = true; clearTimeout(timer);
+  if (window.speechSynthesis) speechSynthesis.cancel();   // so the mic doesn't hear the app's own voice
+  micCtx = micCtx || new (window.AudioContext || window.webkitAudioContext)();
+  if (micCtx.resume) micCtx.resume();                       // must happen inside the tap (iPhone)
+  game.rec = true; speakRender('רגע... 🎤');
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({audio: {echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1}});
+  } catch(e){
+    if (game !== g) return;
+    game.rec = false; game.tries = Math.max(game.tries, 1);
+    return speakRender(e.name === 'NotAllowedError'
+      ? 'צריך לאשר גישה למיקרופון 🙏 (בהגדרות האתר בדפדפן) – או תגידו בקול ולחצו "אמרתי!"'
+      : 'לא מצאתי מיקרופון 🎤 – תגידו בקול ולחצו "אמרתי!"');
+  }
+  if (game !== g){ stream.getTracks().forEach(t => t.stop()); return; }
+
+  // Listen only for this topic's words; anything else comes back as [unk].
+  const grammar = [...new Set(g.words.map(x => x.en)), '[unk]'];
+  const rec = new voskModel.KaldiRecognizer(micCtx.sampleRate, JSON.stringify(grammar));
+  const src = micCtx.createMediaStreamSource(stream);
+  const proc = micCtx.createScriptProcessor(4096, 1, 1);
+  let finished = false, voice = false, lastText = '', timer = null;
+  const tokens = t => (t || '').toLowerCase().split(/\s+/).filter(x => x && x !== '[unk]');
+
+  const wrapUp = why => {
+    if (finished) return; finished = true; clearTimeout(timer);
+    try { proc.disconnect(); src.disconnect(); } catch(e){}
+    stream.getTracks().forEach(t => t.stop());
+    setTimeout(() => { try { rec.remove(); } catch(e){} }, 1500);
+    g.stopRec = null;
     if (game !== g) return;
     game.rec = false;
-    if (err === 'not-allowed' || err === 'service-not-allowed') { micBroken = true; return speakRender('צריך לאשר גישה למיקרופון 🙏 (או להגיד בקול וללחוץ "אמרתי!")' + code() + micHelp()); }
-    if (heard && heardOk(w.en, heard)) return speakSuccess();
-    if (err === 'timeout' && !gotAudio && !heard.length){
-      if (attempt === 0) return speakGo(1);  // the phone's speech service is sometimes slow to wake up – try once more
-      micBroken = true; return speakRender('המיקרופון לא עונה בטלפון הזה 😕 תגידו בקול ולחצו "אמרתי!"' + code() + micHelp());
-    }
-    if (err === 'network') return speakRender('המיקרופון צריך אינטרנט 📶 – תגידו בקול ולחצו "אמרתי!"' + code());
-    if (err === 'audio-capture') { micBroken = true; return speakRender('לא מצאתי מיקרופון 🎤 – תגידו בקול ולחצו "אמרתי!"' + code() + micHelp()); }
-    if (err === 'language-not-supported') { micBroken = true; return speakRender('אין בטלפון זיהוי דיבור באנגלית – תגידו בקול ולחצו "אמרתי!"' + code() + micHelp()); }
+    if (why === 'ok') return speakSuccess();
+    if (why === 'user' && !lastText && !voice) return speakRender();
     game.tries++; game.mistakes++;
-    const msg = heard && heard[0] ? `שמעתי "<span class="en">${esc(heard[0])}</span>"` : 'לא שמעתי 🙉 חכו ל"דברו עכשיו" ודברו חזק וקרוב';
-    speakRender(`${msg} – נסו שוב! 💪${code()}`);
+    const other = tokens(lastText).filter(x => x !== w.en);
+    const msg = other.length ? `שמעתי "<span class="en">${esc(other.join(' '))}</span>"`
+      : voice ? 'לא הבנתי את המילה 🤔' : 'לא שמעתי 🙉 דברו חזק וקרוב לטלפון';
+    speakRender(`${msg} – נסו שוב! 💪`);
   };
-  const setMsg = h => { const m = document.querySelector('.msg'); if (m && game === g) m.innerHTML = h; };
-  r.onstart = () => { log.push('start'); };
-  r.onaudiostart = () => { log.push('audio'); gotAudio = true; arm(8000); setMsg('דברו עכשיו! 👄'); };
-  r.onsoundstart = () => { log.push('sound'); gotAudio = true; };
-  r.onspeechstart = () => { log.push('speech'); gotAudio = true; setMsg('שומע אותך... 👂'); };
-  r.onspeechend = () => { log.push('speechend'); };
-  r.onnomatch = () => { log.push('nomatch'); };
-  r.onresult = e => {
-    log.push('result');
-    gotAudio = true;
-    alts = [];
-    for (const res of e.results) for (const a of res) alts.push(a.transcript);
-    if (heardOk(w.en, alts)) { try { r.abort(); } catch(err){} end(alts); }           // accept as soon as we hear it
-    else if (e.results[e.results.length-1].isFinal) end(alts);
+  rec.on('result', m => {
+    const t = m.result && m.result.text;
+    if (!t) return;                       // silence – keep listening
+    lastText = t;
+    wrapUp(tokens(t).includes(w.en) ? 'ok' : 'wrong');
+  });
+  proc.onaudioprocess = e => {
+    if (finished) return;
+    rec.acceptWaveform(e.inputBuffer);
+    const d = e.inputBuffer.getChannelData(0); let s = 0;
+    for (let i = 0; i < d.length; i += 4) s += d[i] * d[i];
+    const rms = Math.sqrt(s / (d.length / 4));
+    const el = document.getElementById('lvl'); if (el) el.style.width = Math.min(100, rms * 500) + '%';
+    if (rms > 0.03 && !voice){ voice = true; setMsg('שומע אותך... 👂'); }
   };
-  r.onerror = e => { log.push('error:' + e.error); end(alts, e.error); };
-  r.onend = () => { log.push('end'); end(alts); };
-  game.rec = true; speakRender('רגע... מכין את המיקרופון 🎤');
-  try { r.start(); } catch(e){ end(alts, 'start'); }
+  src.connect(proc); proc.connect(micCtx.destination);
+  // Stop: ask Vosk for its final answer, then wrap up.
+  g.stopRec = why => { if (finished) return; try { rec.retrieveFinalResult(); } catch(e){} setTimeout(() => wrapUp(why), 700); };
+  timer = setTimeout(() => g.stopRec && g.stopRec('timeout'), 7000);
+  speakRender('דברו עכשיו! 👄');
 }
 function speakSuccess(){
   if (game.locked) return; game.locked = true;
