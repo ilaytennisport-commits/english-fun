@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2d3436">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="הורים">
+<link rel="manifest" href="manifest-parents.json">
+<link rel="icon" href="icon-parents.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-parents-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700;800&display=swap" rel="stylesheet">
+<title>הורים – בית הספר לאנגלית של משפחת כהן</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:'Rubik',system-ui,sans-serif;background:#f1f2f6;color:#2d3436}
+header{background:linear-gradient(135deg,#2d3436,#6c5ce7);color:#fff;padding:max(16px,env(safe-area-inset-top)) 16px 18px;text-align:center}
+header h1{margin:0;font-size:23px}
+header p{margin:4px 0 0;opacity:.8;font-size:15px}
+main{max-width:760px;margin:0 auto;padding:14px}
+.btn{border:none;border-radius:14px;padding:12px 18px;font-size:17px;font-weight:700;font-family:inherit;cursor:pointer;background:#6c5ce7;color:#fff}
+.btn.light{background:#fff;color:#2d3436;border:2px solid #dfe6e9}
+.btn.green{background:#00b894}
+.btn.small{padding:8px 12px;font-size:15px;border-radius:12px}
+.btn:disabled{opacity:.5}
+input,textarea{width:100%;font-size:17px;padding:11px 13px;border-radius:12px;border:2px solid #dfe6e9;font-family:inherit;outline:none;background:#fff}
+input:focus,textarea:focus{border-color:#a29bfe}
+.card{background:#fff;border-radius:20px;padding:16px;margin-bottom:16px;box-shadow:0 3px 10px rgba(0,0,0,.06)}
+.kid-h{display:flex;align-items:center;gap:12px}
+.kid-h .av{font-size:46px}
+.kid-h h2{margin:0;font-size:23px}
+.kid-h .sub{color:#636e72;font-size:15px}
+.when{margin-inline-start:auto;text-align:center;font-size:13px;color:#636e72}
+.when b{display:block;font-size:15px}
+.when.ok b{color:#00a37a}.when.warn b{color:#e17055}.when.bad b{color:#d63031}
+.pills{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0}
+.pill{background:#f6f5ff;border-radius:14px;padding:8px 4px;text-align:center}
+.pill b{display:block;font-size:22px}
+.pill span{font-size:12.5px;color:#636e72}
+h3{font-size:17px;margin:16px 0 8px}
+.week{display:flex;gap:6px;align-items:flex-end;height:90px}
+.day{flex:1;text-align:center;font-size:12px;color:#636e72;display:flex;flex-direction:column;justify-content:flex-end;height:100%}
+.day i{display:block;background:#a29bfe;border-radius:6px 6px 0 0;min-height:3px;margin-bottom:4px}
+.day.today i{background:#6c5ce7}
+.topic{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:15px}
+.topic .nm{width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tbar{flex:1;height:12px;background:#eee;border-radius:99px;overflow:hidden}
+.tbar i{display:block;height:100%;background:#00b894;border-radius:99px}
+.topic .n{width:48px;text-align:left;color:#636e72;font-size:13px}
+.words{display:flex;flex-wrap:wrap;gap:6px}
+.word{background:#fff0f0;border:1px solid #ffcfcf;border-radius:12px;padding:5px 10px;font-size:15px}
+.word .en{direction:ltr;unicode-bidi:isolate;font-weight:700}
+.word small{color:#d63031}
+.act{display:flex;justify-content:space-between;font-size:14.5px;padding:5px 0;border-bottom:1px solid #f1f2f6}
+.act:last-child{border:none}
+.goalbox{background:#f6f5ff;border-radius:16px;padding:14px;margin-top:8px}
+.goalbox.done{background:#fff7d6;border:2px solid #fdcb6e}
+.gbar{height:14px;background:#fff;border-radius:99px;overflow:hidden;margin:8px 0}
+.gbar i{display:block;height:100%;background:#6c5ce7}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.row>*{flex:1}
+.muted{color:#636e72;font-size:14px}
+.center{text-align:center}
+.err{background:#ffe8e8;color:#c0392b;border-radius:14px;padding:12px;margin-bottom:14px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#2d3436;color:#fff;padding:12px 20px;border-radius:14px;font-weight:700;z-index:9}
+details summary{cursor:pointer;color:#6c5ce7;font-weight:700;margin-top:10px}
+</style>
+</head>
+<body>
+<header><h1>👨‍👩‍👧‍👦 דוח הורים</h1><p>בית הספר לאנגלית של משפחת כהן</p></header>
+<main id="app"></main>
+<script>
+// Same address as in index.html (the family Google Sheet web app).
+const SYNC_URL = '';
+const GAMES = {learn:'🃏 לומדים מילים', listen:'👂 שומעים ובוחרים', memory:'🧠 זיכרון', speak:'🎤 אומרים באנגלית',
+  picture:'🔤 מה בתמונה', spell:'✍️ מאייתים', translate:'🔁 מתרגמים'};
+const PIN_KEY = 'englishFun.parentPin';
+const app = document.getElementById('app');
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let kids = [], pin = localStorage.getItem(PIN_KEY) || '';
+
+function toast(t){ const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), 2200); }
+const dayStr = d => d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();
+function ago(ts){
+  if (!ts) return {t:'עוד לא שיחק', c:'bad'};
+  const days = Math.floor((new Date(dayStr(new Date())) - new Date(dayStr(new Date(ts)))) / 864e5);
+  if (days <= 0) return {t:'היום', c:'ok'};
+  if (days === 1) return {t:'אתמול', c:'ok'};
+  return {t:`לפני ${days} ימים`, c: days <= 3 ? 'warn' : 'bad'};
+}
+
+function screenSetup(){
+  app.innerHTML = `<div class="card center"><div style="font-size:50px">🔌</div><h2>עוד לא חיברנו את הדוח</h2>
+    <p class="muted">צריך לסיים את ההגדרה של גיליון גוגל (פעם אחת). אחרי זה הדוח יתעדכן לבד מהטלפונים של הילדים.</p></div>`;
+}
+function screenPin(msg){
+  app.innerHTML = `<div class="card center"><div style="font-size:50px">🔒</div><h2>כניסת הורים</h2>
+    ${msg ? `<div class="err">${esc(msg)}</div>` : ''}
+    <p class="muted">הקוד שבחרת בהגדרת הגיליון</p>
+    <input id="pin" type="password" inputmode="numeric" style="text-align:center;font-size:24px;letter-spacing:6px" autocomplete="off">
+    <button class="btn" style="width:100%;margin-top:12px" onclick="login()">כניסה</button></div>`;
+  const i = document.getElementById('pin'); i.focus(); i.onkeydown = e => { if (e.key === 'Enter') login(); };
+}
+function login(){ pin = document.getElementById('pin').value.trim(); if (pin) load(); }
+
+async function load(){
+  app.innerHTML = '<div class="card center muted">טוען... ⏳</div>';
+  try {
+    const res = await (await fetch(SYNC_URL + '?action=all&pin=' + encodeURIComponent(pin) + '&t=' + Date.now())).json();
+    if (!res.ok){ localStorage.removeItem(PIN_KEY); return screenPin(res.error === 'pin' ? 'הקוד לא נכון' : 'שגיאה'); }
+    localStorage.setItem(PIN_KEY, pin);
+    kids = res.kids || [];
+    render();
+  } catch(e){
+    app.innerHTML = `<div class="err">לא הצלחתי לטעון את הנתונים. בדקו את האינטרנט ונסו שוב.</div><button class="btn" onclick="load()">🔄 לנסות שוב</button>`;
+  }
+}
+
+function render(){
+  if (!kids.length){
+    app.innerHTML = `<div class="card center"><div style="font-size:50px">📭</div><h2>עוד אין נתונים</h2>
+      <p class="muted">ברגע שילד ייכנס לאפליקציה בטלפון שלו (עם אינטרנט), הוא יופיע כאן.</p>
+      <button class="btn" onclick="load()">🔄 רענון</button></div>`;
+    return;
+  }
+  kids.sort((a,b) => (b.lastPlayed || 0) - (a.lastPlayed || 0));
+  app.innerHTML = `<div class="row" style="margin-bottom:12px"><span class="muted">${kids.length} ילדים</span>
+    <button class="btn light small" style="flex:0" onclick="load()">🔄 רענון</button></div>` + kids.map(kidCard).join('') +
+    `<p class="center muted" style="margin:24px 0"><a href="#" onclick="localStorage.removeItem(PIN_KEY);location.reload();return false">יציאה</a></p>`;
+}
+
+function kidCard(k, idx){
+  const i = kids.indexOf(k), w = ago(k.lastPlayed), mins = k.minutes || {};
+  const days = [...Array(7)].map((_, n) => { const d = new Date(); d.setDate(d.getDate() - (6 - n)); return d; });
+  const week = days.map(d => mins[dayStr(d)] || 0), maxM = Math.max(10, ...week), weekTotal = week.reduce((a,b) => a + b, 0);
+  const dn = ['א','ב','ג','ד','ה','ו','ש'];
+  const topics = (k.topics || []).filter(t => t.got > 0).sort((a,b) => b.got/b.max - a.got/a.max);
+  const untouched = (k.topics || []).filter(t => !t.got).map(t => t.icon + ' ' + t.he);
+  const topicName = id => { const t = (k.topics || []).find(x => x.id === id); return t ? t.icon + ' ' + t.he : id; };
+  return `<div class="card">
+    <div class="kid-h"><span class="av">${esc(k.avatar)}</span>
+      <div><h2>${esc(k.name)}</h2><div class="sub">רמה: ${esc(k.levelName || k.level)}${k.theme === 'spider' ? ' · 🕷️ עולם גיבור העכביש' : ''}</div></div>
+      <div class="when ${w.c}"><b>${w.t}</b>שיחק לאחרונה</div></div>
+    <div class="pills">
+      <div class="pill"><b>⭐ ${k.earned || 0}</b><span>כוכבים</span></div>
+      <div class="pill"><b>🔥 ${k.streak || 0}</b><span>ימים ברצף</span></div>
+      <div class="pill"><b>⏱️ ${weekTotal}</b><span>דקות השבוע</span></div>
+      <div class="pill"><b>🎮 ${k.rounds || 0}</b><span>משחקים</span></div>
+    </div>
+    ${goalHtml(k, i)}
+    <h3>⏱️ דקות משחק ב-7 הימים האחרונים</h3>
+    <div class="week">${week.map((m, n) => `<div class="day ${n === 6 ? 'today' : ''}"><i style="height:${Math.round(60 * m / maxM)}px"></i>${m ? m + "'" : ''}<br>${dn[days[n].getDay()]}</div>`).join('')}</div>
+    <h3>📚 התקדמות בנושאים</h3>
+    ${topics.length ? topics.map(t => `<div class="topic"><span class="nm">${t.icon} ${esc(t.he)}</span>
+      <span class="tbar"><i style="width:${Math.round(100*t.got/t.max)}%"></i></span><span class="n">${t.got}/${t.max}⭐</span></div>`).join('')
+      : '<div class="muted">עוד לא שיחק בנושאים</div>'}
+    ${untouched.length && topics.length ? `<div class="muted" style="margin-top:6px">עוד לא נגע: ${untouched.map(esc).join(' · ')}</div>` : ''}
+    <h3>🧩 מילים שקשות לו</h3>
+    ${(k.hard || []).length ? `<div class="words">${k.hard.slice(0, 12).map(x => `<span class="word"><span class="en">${esc(x.en)}</span> ${esc(x.he)} <small>✗${x.wrong}</small></span>`).join('')}</div>`
+      : '<div class="muted">אין עדיין מילים קשות 👌</div>'}
+    <details><summary>🕒 משחקים אחרונים</summary>
+      ${(k.log || []).slice(0, 10).map(l => `<div class="act"><span>${topicName(l.t)} · ${GAMES[l.g] || l.g}</span>
+        <span>${'⭐'.repeat(l.s)} <span class="muted">${new Date(l.d).toLocaleDateString('he-IL', {day:'numeric', month:'numeric'})} ${new Date(l.d).toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'})}</span></span></div>`).join('') || '<div class="muted">אין</div>'}
+    </details>
+    <h3>💌 הודעה ל${esc(k.name)}</h3>
+    ${k.parent && k.parent.msg ? `<div class="muted" style="margin-bottom:6px">הודעה אחרונה: "${esc(k.parent.msg.text)}"</div>` : ''}
+    <div class="row"><input id="msg${i}" maxlength="80" placeholder="כל הכבוד אלוף! 🏆"><button class="btn small" style="flex:0" onclick="sendMsg(${i})">שליחה</button></div>
+    <details><summary style="color:#d63031;font-weight:500;font-size:13px">מחיקת ${esc(k.name)} מהדוח</summary>
+      <p class="muted">מוחק רק מהדוח. אם הילד ישחק שוב הוא יופיע מחדש.</p>
+      <button class="btn small" style="background:#d63031" onclick="removeKid(${i})">מחיקה</button></details>
+  </div>`;
+}
+
+function goalHtml(k, i){
+  const g = k.parent && k.parent.goal;
+  if (g && !g.given){
+    const need = Math.max(1, g.target - g.start), got = Math.max(0, Math.min(need, (k.earned || 0) - g.start)), done = (k.earned || 0) >= g.target;
+    return `<div class="goalbox ${done ? 'done' : ''}">
+      <b>${done ? '✅ הגיע ליעד! מגיע לו:' : '🎯 יעד:'} ${esc(g.prize)}</b>
+      <div class="gbar"><i style="width:${Math.round(100 * got / need)}%"></i></div>
+      <div class="row"><span class="muted">⭐ ${got} מתוך ${need}${done ? '' : ` – עוד ${need - got}`}</span>
+        ${done ? `<button class="btn green small" onclick="giveGoal(${i})">🎁 נתתי את הפרס</button>`
+               : `<button class="btn light small" style="flex:0" onclick="cancelGoal(${i})">ביטול יעד</button>`}</div></div>`;
+  }
+  const last = g && g.given ? `<div class="muted" style="margin-bottom:6px">פרס אחרון: ${esc(g.prize)} ✔</div>` : '';
+  return `<div class="goalbox">${last}<b>🎯 קביעת יעד ופרס</b>
+    <div class="row" style="margin-top:8px"><input id="gs${i}" type="number" min="1" max="500" value="20" style="flex:0 0 80px;text-align:center">
+      <span class="muted" style="flex:0">כוכבים עוד =</span><input id="gp${i}" maxlength="40" placeholder="גלידה 🍦"></div>
+    <button class="btn" style="width:100%;margin-top:8px" onclick="setGoal(${i})">שמירת יעד</button>
+    <div class="muted" style="margin-top:6px">משחק קצר נותן 1–3 כוכבים. 20 כוכבים ≈ שבוע של משחק יומי.</div></div>`;
+}
+
+async function saveParent(i, parent, okMsg){
+  const k = kids[i];
+  try {
+    const res = await (await fetch(SYNC_URL, {method: 'POST', body: JSON.stringify({action: 'parent', pin, id: k.id, parent})})).json();
+    if (!res.ok) throw new Error(res.error);
+    k.parent = parent; render(); toast(okMsg);
+  } catch(e){ toast('שגיאה בשמירה – נסו שוב'); }
+}
+function setGoal(i){
+  const k = kids[i], n = parseInt(document.getElementById('gs' + i).value, 10), prize = document.getElementById('gp' + i).value.trim();
+  if (!n || n < 1){ toast('כמה כוכבים?'); return; }
+  if (!prize){ toast('מה הפרס?'); document.getElementById('gp' + i).focus(); return; }
+  const earned = k.earned || 0;
+  saveParent(i, {...(k.parent || {}), goal: {start: earned, target: earned + n, prize, set: Date.now(), given: false}}, 'היעד נשמר ✔ הילד יראה אותו בפעם הבאה שייכנס');
+}
+function giveGoal(i){ const k = kids[i]; saveParent(i, {...k.parent, goal: {...k.parent.goal, given: true, givenAt: Date.now()}}, 'מעולה! אפשר לקבוע יעד חדש 🎯'); }
+function cancelGoal(i){ if (!confirm('לבטל את היעד?')) return; const k = kids[i]; const p = {...k.parent}; delete p.goal; saveParent(i, p, 'היעד בוטל'); }
+function sendMsg(i){
+  const k = kids[i], text = document.getElementById('msg' + i).value.trim();
+  if (!text){ toast('מה לכתוב?'); return; }
+  saveParent(i, {...(k.parent || {}), msg: {id: Date.now(), text}}, 'ההודעה נשלחה 💌');
+}
+async function removeKid(i){
+  const k = kids[i];
+  if (!confirm(`למחוק את ${k.name} מהדוח?`)) return;
+  try {
+    const res = await (await fetch(SYNC_URL, {method: 'POST', body: JSON.stringify({action: 'parent', pin, id: k.id, remove: true})})).json();
+    if (!res.ok) throw new Error();
+    kids.splice(i, 1); render(); toast('נמחק');
+  } catch(e){ toast('שגיאה'); }
+}
+
+if (!SYNC_URL) screenSetup(); else if (pin) load(); else screenPin();
+document.addEventListener('visibilitychange', () => { if (!document.hidden && SYNC_URL && pin && kids.length) load(); });
+if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>

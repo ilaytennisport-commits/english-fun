@@ -115,6 +115,34 @@ button.pill{cursor:pointer;box-shadow:0 4px 0 rgba(0,0,0,.12)}
 .sticker.lock{background:rgba(255,255,255,.4);font-size:30px;color:#fff}
 .conf{position:fixed;top:-60px;pointer-events:none;animation:fall 3s linear forwards;z-index:9}
 .note{background:rgba(255,255,255,.85);border-radius:18px;padding:12px 16px;text-align:center;font-size:17px;margin-top:16px}
+/* goal + parent message */
+.goal{background:#fff;border-radius:22px;padding:12px 16px;margin:10px 0 4px;box-shadow:0 5px 0 rgba(0,0,0,.12);text-align:center}
+.goal.done{background:#fff7d6;border:3px solid #fdcb6e;animation:pulse 1.6s infinite}
+.goal-t{font-size:19px;font-weight:700}.goal-t b{color:#e84393}
+.goal-s{font-size:16px;color:#636e72;font-weight:700}
+.popup{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:20;padding:20px}
+.popup-in{background:#fff;border-radius:28px;padding:22px;max-width:380px;width:100%;text-align:center;animation:pop .5s}
+.popup-t{font-size:20px;font-weight:800;color:#6c5ce7}
+.popup-m{font-size:26px;font-weight:800;margin:12px 0 4px;white-space:pre-wrap}
+/* spider-hero world */
+body.spider{background:
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260' viewBox='0 0 260 260'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='.13' stroke-width='1.5'%3E%3Cpath d='M0 0L260 260M0 0L260 90M0 0L90 260M0 0L180 260M0 0L260 175'/%3E%3Cpath d='M40 0Q35 35 0 40M85 0Q75 75 0 85M135 0Q118 118 0 135M190 0Q165 165 0 190M250 0Q215 215 0 250'/%3E%3C/g%3E%3C/svg%3E") top right/260px no-repeat fixed,
+  linear-gradient(180deg,#0b1d51 0%,#1e3c8c 55%,#c0392b 140%) fixed}
+body.spider::after{content:'';position:fixed;left:0;right:0;bottom:0;height:90px;pointer-events:none;z-index:-1;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='90' viewBox='0 0 400 90'%3E%3Cpath fill='%23081236' d='M0 90V50h30V30h25v20h20V15h30v35h15V40h25V20h20v30h25V35h30V10h28v40h22V30h20v25h25V45h30V25h25v65z'/%3E%3C/svg%3E") bottom/400px 90px repeat-x}
+body.spider .card{border:3px solid #e23636;box-shadow:0 6px 0 #8e1b1b}
+body.spider .btn.primary,body.spider .mic{background:#e23636}
+body.spider .mic.on{background:#1e5bd8}
+body.spider .bar>div,body.spider .vol>div{background:#e23636}
+body.spider .mc{background:linear-gradient(135deg,#e23636,#1e5bd8)}
+body.spider .mc.open{background:#fff}
+.mascot{background:linear-gradient(90deg,#e23636,#1e5bd8);color:#fff;border-radius:22px;padding:12px 14px;margin:12px 0 4px;
+  font-weight:800;font-size:17px;display:flex;align-items:center;gap:10px;justify-content:center;text-align:center;box-shadow:0 5px 0 rgba(0,0,0,.25)}
+.mascot{font-size:34px}.mascot>span{flex:1;font-size:17px}
+.drop{position:fixed;top:0;z-index:15;pointer-events:none;display:flex;flex-direction:column;align-items:center;animation:drop 1.5s ease-in-out forwards}
+.drop .thread{width:2px;height:40vh;background:rgba(255,255,255,.85)}
+.drop .spidey{font-size:64px;margin-top:-8px;filter:drop-shadow(0 4px 4px rgba(0,0,0,.4))}
+@keyframes drop{0%{transform:translateY(-100%)}35%{transform:translateY(0)}45%{transform:translateY(-6%)}55%{transform:translateY(0)}80%{transform:translateY(0)}100%{transform:translateY(-100%)}}
 @keyframes pop{0%{transform:scale(.6)}60%{transform:scale(1.15)}100%{transform:scale(1)}}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-10px)}75%{transform:translateX(10px)}}
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
@@ -189,9 +217,23 @@ const GAMES = [
 const STICKERS = ['🦄','🐉','🦖','🚀','🌈','🍦','🎈','🏆','👑','🦋','🐬','🦊','🐼','🐧','🦜','🍩','🎸','⚽','🏀','🎮',
   '🧸','🪁','🎠','🛸','🌟','💎','🍭','🐙','🦒','🦓','🐢','🦀','🍉','🧁','🎁','🌻','🐳','🦩','🏰','🎡'];
 const STICK_EVERY = 5; // stars per sticker
-const AVATARS = ['🦁','🐯','🐼','🦊','🐸','🐵','🦄','🐰','🐻','🐨','🐷','🐙','🦖','🐱'];
+const AVATARS = ['🦁','🐯','🐼','🦊','🐸','🐵','🦄','🐰','🐻','🐨','🐷','🐙','🦖','🐱','🕷️','🦸','🦸‍♂️','🦸‍♀️'];
+// Spider-hero world (for the little ones who love superheroes) – original look, no licensed characters.
+const HERO_STICKERS = ['🕷️','🕸️','🦸','🦸‍♂️','🦸‍♀️','💥','⚡','🛡️','🏙️','🌃','🚀','🚁','🏆','🥇','🎯','💪','🔥','⭐','🌟','🦅',
+  '🐺','🦁','🐯','🦈','🐉','🦖','🚓','🚒','🏎️','🛸','🌋','🌪️','⛈️','🎆','🎇','👊','🧗','🥋','👑','🌠'];
+const THEMES = {
+  normal: {name:'רגיל', icon:'🎈', stickers: STICKERS, conf: ['🎉','⭐','🎈','✨','🌟'],
+    praise: ['', 'יפה מאוד! 👍', 'כל הכבוד! 🎉', 'מדהים!!! 🏆'], topicsTitle: 'בחרו נושא'},
+  spider: {name:'גיבור העכביש', icon:'🕷️', stickers: HERO_STICKERS, conf: ['🕸️','🕷️','💥','⭐','⚡'],
+    praise: ['', 'יפה, גיבור! 💪', 'סופר-גיבור! 🦸', 'הצלת את העיר!!! 🕷️'], topicsTitle: 'בחרו משימה 🕸️'},
+};
+const themeOf = p => THEMES[(p && p.theme) || 'normal'] || THEMES.normal;
+const th = () => themeOf(cur);
 
-const APP_VERSION = 9;
+// Progress report for parents: address of the family Google Sheet (see parents-setup/README.md).
+const SYNC_URL = '';
+
+const APP_VERSION = 10;
 
 // ---------- Helpers ----------
 const $ = s => document.querySelector(s);
@@ -199,7 +241,10 @@ const app = $('#app');
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function shuffle(a){ a = a.slice(); for (let i = a.length-1; i > 0; i--){ const j = Math.random()*(i+1)|0; [a[i],a[j]] = [a[j],a[i]]; } return a; }
 const sample = (a,n) => shuffle(a).slice(0,n);
-function show(html){ app.innerHTML = html; window.scrollTo(0,0); }
+function show(html){
+  document.body.classList.toggle('spider', !!(cur && cur.theme === 'spider'));
+  app.innerHTML = html; window.scrollTo(0,0);
+}
 function starsHtml(n){ return [1,2,3].map(i => `<span class="st ${i<=n?'on':''}">★</span>`).join(''); }
 
 // ---------- Storage ----------
@@ -222,7 +267,47 @@ function streakNow(p){
   const y = new Date(); y.setDate(y.getDate()-1);
   return (p.streak.last === dayStr(new Date()) || p.streak.last === dayStr(y)) ? p.streak.count : 0;
 }
-const stickerCount = p => Math.min(STICKERS.length, Math.floor(p.earned / STICK_EVERY));
+const stickerCount = p => Math.min(themeOf(p).stickers.length, Math.floor(p.earned / STICK_EVERY));
+
+// ---------- Progress tracking (for the parents' report) ----------
+function ensureTrack(p){
+  p.rounds = p.rounds || 0; p.log = p.log || []; p.words = p.words || {}; p.minutes = p.minutes || {}; p.parent = p.parent || {};
+  return p;
+}
+// Remember which words were easy or hard: [right, wrong]
+function wordResult(en, ok){
+  if (!cur || !en) return;
+  ensureTrack(cur);
+  const w = cur.words[en] || (cur.words[en] = [0, 0]);
+  w[ok ? 0 : 1]++;
+}
+function wordHe(en){ for (const t of TOPICS) for (const w of t.words) if (w.en === en) return w.he; return ''; }
+function kidSummary(p){
+  ensureTrack(p);
+  const days = Object.keys(p.minutes).sort((a,b) => new Date(b) - new Date(a)).slice(0, 30);
+  const hard = Object.entries(p.words).filter(([,v]) => v[1] > 0)
+    .sort((a,b) => (b[1][1] - b[1][0]/2) - (a[1][1] - a[1][0]/2)).slice(0, 15)
+    .map(([en,v]) => ({en, he: wordHe(en), right: v[0], wrong: v[1]}));
+  const topics = TOPICS.filter(t => (t.min || 1) <= p.level).map(t => {
+    const gs = gamesFor(p.level);
+    return {id: t.id, he: t.he, icon: t.icon, got: gs.reduce((s,g) => s + (p.best[t.id+':'+g.id] || 0), 0), max: gs.length*3};
+  });
+  return {id: String(p.id), name: p.name, avatar: p.avatar, level: p.level, levelName: LEVELS[p.level].name, theme: p.theme || 'normal',
+    earned: p.earned, stickers: stickerCount(p), streak: streakNow(p), rounds: p.rounds,
+    lastPlayed: p.log[0] ? p.log[0].d : null, minutes: Object.fromEntries(days.map(d => [d, Math.ceil(p.minutes[d])])),
+    topics, hard, log: p.log.slice(0, 20), version: APP_VERSION};
+}
+// Send progress to the family sheet; the answer brings back the parent's goal and message.
+function syncNow(p){
+  if (!SYNC_URL || !p || !navigator.onLine) return;
+  fetch(SYNC_URL, {method: 'POST', body: JSON.stringify({action: 'progress', kid: kidSummary(p)})})
+    .then(r => r.json())
+    .then(res => {
+      if (!res || !res.ok || !res.parent) return;
+      p.parent = res.parent; save();
+      if (cur === p && !game && document.getElementById('home')) screenHome();
+    }).catch(() => {});
+}
 
 // ---------- Sound ----------
 let actx;
@@ -241,8 +326,27 @@ function tone(freqs, dur=0.12, type='sine'){
     });
   } catch(e){}
 }
+function thwip(){
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const t = actx.currentTime, n = actx.sampleRate * 0.22;
+    const buf = actx.createBuffer(1, n, actx.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random()*2 - 1) * (1 - i/n);
+    const src = actx.createBufferSource(), f = actx.createBiquadFilter(), g = actx.createGain();
+    src.buffer = buf; f.type = 'bandpass'; f.Q.value = 6;
+    f.frequency.setValueAtTime(3500, t); f.frequency.exponentialRampToValueAtTime(700, t + 0.2);
+    g.gain.setValueAtTime(0.5, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+    src.connect(f).connect(g).connect(actx.destination); src.start(t);
+  } catch(e){}
+}
+function heroDrop(){
+  const s = document.createElement('div');
+  s.className = 'drop'; s.style.left = (15 + Math.random()*70) + 'vw';
+  s.innerHTML = '<div class="thread"></div><div class="spidey">🕷️</div>';
+  document.body.appendChild(s); setTimeout(() => s.remove(), 1600);
+}
 const sfx = {
-  ok:  () => tone([660,880,1320], 0.1),
+  ok:  () => { if (cur && cur.theme === 'spider'){ thwip(); heroDrop(); } else tone([660,880,1320], 0.1); },
   bad: () => tone([240,190], 0.16, 'triangle'),
   win: () => tone([523,659,784,1047], 0.14),
 };
@@ -267,7 +371,7 @@ function say(text, rate){
 function later(fn, ms){ const g = game; setTimeout(() => { if (game === g) fn(); }, ms); }
 
 function confetti(n){
-  const em = ['🎉','⭐','🎈','✨','🌟'];
+  const em = th().conf;
   for (let i = 0; i < 10 + n*8; i++){
     const s = document.createElement('span');
     s.className = 'conf'; s.textContent = em[i % em.length];
@@ -314,12 +418,16 @@ async function installApp(){
   await installEvt.userChoice;
   installEvt = null; screenProfiles();
 }
-function pickProfile(i){ cur = db.profiles[i]; say('Hello ' + cur.name.replace(/[^a-zA-Z ]/g,'')); screenHome(); }
+function pickProfile(i){
+  cur = ensureTrack(db.profiles[i]);
+  say(cur.theme === 'spider' ? 'Hello hero!' : 'Hello ' + cur.name.replace(/[^a-zA-Z ]/g,''));
+  screenHome(); syncNow(cur);
+}
 
 let profForm = {};
 function screenProfileForm(idx){
   const p = idx != null ? db.profiles[idx] : null;
-  profForm = {idx, name: p ? p.name : '', avatar: p ? p.avatar : AVATARS[0], level: p ? p.level : 1};
+  profForm = {idx, name: p ? p.name : '', avatar: p ? p.avatar : AVATARS[0], level: p ? p.level : 1, theme: (p && p.theme) || 'normal'};
   renderForm();
 }
 function renderForm(){
@@ -334,6 +442,9 @@ function renderForm(){
     <label>רמה</label>
     <div class="levels">${[1,2,3].map(l => `<button class="lv ${l==profForm.level?'sel':''}" onclick="profForm.level=${l};renderForm()">
       <b>${LEVELS[l].name}</b><small>גילאי ${LEVELS[l].ages}</small></button>`).join('')}</div>
+    <label>עולם</label>
+    <div class="levels" style="grid-template-columns:1fr 1fr">${Object.entries(THEMES).map(([k,t]) => `<button class="lv ${k===profForm.theme?'sel':''}" onclick="profForm.theme='${k}';renderForm()">
+      <b style="font-size:30px">${t.icon}</b><small>${t.name}</small></button>`).join('')}</div>
     <button class="btn primary big" onclick="saveProfile()">שמירה ✔</button>
     ${editing ? `<button class="btn danger" onclick="deleteProfile()">מחיקת הפרופיל</button>` : ''}
   </div>`);
@@ -342,13 +453,13 @@ function saveProfile(){
   const name = profForm.name.trim();
   if (!name){ $('#nm').focus(); $('#nm').classList.add('shake'); return; }
   if (profForm.idx != null){
-    Object.assign(db.profiles[profForm.idx], {name, avatar: profForm.avatar, level: profForm.level});
+    Object.assign(db.profiles[profForm.idx], {name, avatar: profForm.avatar, level: profForm.level, theme: profForm.theme});
     cur = db.profiles[profForm.idx];
   } else {
-    cur = {id: Date.now(), name, avatar: profForm.avatar, level: profForm.level, best: {}, earned: 0, streak: {count:0, last:''}};
+    cur = {id: Date.now(), name, avatar: profForm.avatar, level: profForm.level, theme: profForm.theme, best: {}, earned: 0, streak: {count:0, last:''}};
     db.profiles.push(cur);
   }
-  save(); screenHome();
+  save(); syncNow(cur); screenHome();
 }
 function deleteProfile(){
   const p = db.profiles[profForm.idx];
@@ -377,12 +488,38 @@ function screenHome(){
     <span class="pill">🔥 ${streakNow(p)} ימים ברצף</span>
     <button class="pill" onclick="screenStickers()">🎁 מדבקות ${stickerCount(p)}/${STICKERS.length}</button>
   </div>
-  <h1>בחרו נושא</h1>
+  ${goalBanner(p)}
+  ${p.theme === 'spider' ? '<div class="mascot">🕷️ <span>גיבור, העיר צריכה אותך!<br>לומדים אנגלית ומצילים את העיר!</span> 🏙️</div>' : ''}
+  <h1 id="home">${th().topicsTitle}</h1>
   <div class="grid">${topics.map(t => { const s = topicStars(t); return `
     <button class="card" style="border-bottom:6px solid ${t.color}" onclick="screenTopic('${t.id}')">
       <div class="ico">${t.icon}</div><div class="lbl">${t.he}</div><div class="sub en">${t.en}</div>
       <div class="sub">⭐ ${s.got}/${s.max}</div></button>`; }).join('')}
   </div>`);
+  parentMessage(p);
+}
+
+// Goal the parent set ("30 more stars = ice cream"), shown as a progress bar.
+function goalBanner(p){
+  const g = p.parent && p.parent.goal;
+  if (!g || g.given) return '';
+  const need = Math.max(1, g.target - g.start), got = Math.max(0, Math.min(need, p.earned - g.start));
+  const done = p.earned >= g.target;
+  return `<div class="goal ${done ? 'done' : ''}">
+    <div class="goal-t">${done ? '🎉 הגעת ליעד! מגיע לך:' : '🎯 היעד שלך:'} <b>${esc(g.prize)}</b></div>
+    <div class="vol" style="width:100%;max-width:none;height:18px;margin:8px 0 4px"><div style="width:${Math.round(100*got/need)}%"></div></div>
+    <div class="goal-s">${done ? 'תראו לאבא ולאמא! 🥳' : `⭐ ${got} מתוך ${need} – עוד ${need - got} כוכבים!`}</div></div>`;
+}
+// A note from the parents pops up once.
+function parentMessage(p){
+  const m = p.parent && p.parent.msg;
+  if (!m || !m.text || p.seenMsg === m.id) return;
+  const box = document.createElement('div');
+  box.className = 'popup';
+  box.innerHTML = `<div class="popup-in"><div style="font-size:60px">💌</div><div class="popup-t">הודעה מאבא ואמא</div>
+    <div class="popup-m">${esc(m.text)}</div><button class="btn primary big">תודה! ❤️</button></div>`;
+  box.querySelector('button').onclick = () => { p.seenMsg = m.id; save(); box.remove(); };
+  document.body.appendChild(box); sfx.win(); confetti(2);
 }
 
 function screenTopic(id){
@@ -400,7 +537,7 @@ function screenTopic(id){
 }
 
 function screenStickers(){
-  const n = stickerCount(cur);
+  const n = stickerCount(cur), STICKERS = th().stickers;
   const left = n >= STICKERS.length ? '' : `<div class="note">עוד ${STICK_EVERY - cur.earned % STICK_EVERY} ⭐ עד המדבקה הבאה!</div>`;
   show(`<div class="top"><button class="btn back" onclick="screenHome()">→</button>
     <div class="who">🎁 אלבום המדבקות</div><span style="width:56px"></span></div>
@@ -411,7 +548,7 @@ function screenStickers(){
 // ---------- Games ----------
 function startGame(topicId, gameId){
   const topic = TOPICS.find(t => t.id === topicId);
-  game = {topic, id: gameId, words: wordsFor(topic), i: 0, mistakes: 0, total: 0};
+  game = {topic, id: gameId, words: wordsFor(topic), i: 0, mistakes: 0, total: 0, t0: Date.now()};
   ({learn: learnNew, listen: quizNew, picture: quizNew, translate: quizNew, memory: memoryNew, speak: speakNew, spell: spellNew})[gameId]();
 }
 function quitGame(){ const t = game.topic.id; if (game.stopRec) game.stopRec('quit'); game = null; if (window.speechSynthesis) speechSynthesis.cancel(); screenTopic(t); }
@@ -467,10 +604,12 @@ function quizPick(k){
   const w = game.list[game.i], el = $('#o'+k);
   if (game.opts[k] === w){
     game.locked = true; el.classList.add('right'); sfx.ok();
+    if (!game.qWrong) wordResult(w.en, true); game.qWrong = false;
     later(() => say(w.en), 300);
     later(() => { game.i++; game.opts = null; game.i >= game.total ? finish() : quizRender(); }, 1400);
   } else {
     el.classList.add('wrong'); el.disabled = true; game.mistakes++; sfx.bad();
+    if (!game.qWrong) wordResult(w.en, false); game.qWrong = true;
     if (game.id === 'listen') later(() => say(w.en), 600);
   }
 }
@@ -655,8 +794,9 @@ async function speakGo(){
     g.stopRec = null;
     if (game !== g) return;
     game.rec = false;
-    if (why === 'ok') return speakSuccess();
+    if (why === 'ok') return speakSuccess(true);
     if (why === 'user' && !lastText && !voice) return speakRender();
+    if (!game.tries && (voice || lastText)) wordResult(w.en, false);
     game.tries++; game.mistakes++;
     const other = tokens(lastText).filter(x => x !== w.en);
     const msg = other.length ? `שמעתי "<span class="en">${esc(other.join(' '))}</span>"`
@@ -692,8 +832,9 @@ async function speakGo(){
     el.innerHTML = statLine();
   }, 500);
 }
-function speakSuccess(){
+function speakSuccess(heard){
   if (game.locked) return; game.locked = true;
+  if (heard && !game.tries) wordResult(game.list[game.i].en, true);
   game.rec = false;
   sfx.ok(); speakRender('מעולה! 🎉', true);
   later(() => say(game.list[game.i].en), 300);
@@ -735,11 +876,13 @@ function spellTap(k){
     t.used = true; game.pos++;
     if (game.pos === w.en.length){
       game.locked = true; spellRender(); sfx.ok();
+      if (!game.qWrong) wordResult(w.en, true); game.qWrong = false;
       later(() => say(w.en), 250);
       later(() => { game.i++; game.i >= game.total ? finish() : spellSetup(); }, 1600);
     } else { tone([720], 0.06); spellRender(); }
   } else {
     game.mistakes++; sfx.bad();
+    if (!game.qWrong) wordResult(w.en, false); game.qWrong = true;
     const el = $('#t'+k); el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake');
   }
 }
@@ -756,10 +899,19 @@ function finish(stars){
   const key = g.topic.id + ':' + g.id;
   cur.best[key] = Math.max(cur.best[key] || 0, stars);
   const before = stickerCount(cur);
+  const goal = cur.parent && cur.parent.goal, goalBefore = goal && !goal.given && cur.earned >= goal.target;
   cur.earned += stars;
   bumpStreak(cur);
+  ensureTrack(cur);
+  cur.rounds++;
+  cur.log.unshift({d: Date.now(), t: g.topic.id, g: g.id, s: stars});
+  cur.log.length = Math.min(cur.log.length, 30);
+  const today = dayStr(new Date());
+  cur.minutes[today] = (cur.minutes[today] || 0) + Math.min(15, (Date.now() - g.t0) / 60000);
   const after = stickerCount(cur);
-  save();
+  const goalNow = goal && !goal.given && !goalBefore && cur.earned >= goal.target;
+  save(); syncNow(cur);
+  const STICKERS = th().stickers;
   game = null;
   sfx.win(); confetti(stars);
   setTimeout(() => say(['', 'Good try!', 'Well done!', 'Amazing! Great job!'][stars]), 600);
@@ -768,9 +920,9 @@ function finish(stars){
     : after >= STICKERS.length ? `<div class="next">אספת את כל המדבקות! 🏆</div>`
     : `<div class="next">עוד ${STICK_EVERY - cur.earned % STICK_EVERY} ⭐ עד המדבקה הבאה</div>`;
   show(`<div class="result">
-    <h1>${['', 'יפה מאוד! 👍', 'כל הכבוד! 🎉', 'מדהים!!! 🏆'][stars]}</h1>
+    <h1>${th().praise[stars]}</h1>
     <div class="bigstars">${[1,2,3].map(i => `<span class="bs ${i<=stars?'on':''}" style="animation-delay:${i*0.25}s">★</span>`).join('')}</div>
-    ${prize}
+    ${goalNow ? `<div class="newsticker">🎯 הגעת ליעד!<div class="stk">🎁</div>מגיע לך: ${esc(goal.prize)}<br>תראו לאבא ולאמא!</div>` : prize}
     <div class="row">
       <button class="btn primary" onclick="startGame('${g.topic.id}','${g.id}')">🔁 עוד פעם</button>
       <button class="btn" onclick="screenTopic('${g.topic.id}')">משחק אחר</button>
@@ -778,7 +930,9 @@ function finish(stars){
 }
 
 // ---------- Start ----------
-if (db.profiles.length === 1 && isStandalone()){ cur = db.profiles[0]; screenHome(); } else screenProfiles();
+if (db.profiles.length === 1 && isStandalone()){ cur = ensureTrack(db.profiles[0]); screenHome(); syncNow(cur); } else screenProfiles();
+// Back to the app later (e.g. the next day): pick up a new goal or message from the parents.
+document.addEventListener('visibilitychange', () => { if (!document.hidden && cur && !game) syncNow(cur); });
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')){
   navigator.serviceWorker.register('sw.js').then(reg => {
     // Check for a new version whenever the app comes back to the screen.
