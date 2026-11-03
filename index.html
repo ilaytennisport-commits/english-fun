@@ -537,40 +537,59 @@ function speakRender(msg, good){
   <div class="center">
     <button class="mic ${game.rec ? 'on' : ''}" onclick="speakGo()">🎤</button>
     <div><span class="msg ${good ? 'good' : ''}">${msg || 'לחצו על המיקרופון ותגידו את המילה'}</span></div>
-    ${game.tries >= 2 ? `<button class="btn small" onclick="speakNext()">דלג ⏭</button>` : ''}
+    ${game.rec ? '' : `<div class="row" style="margin-top:6px">
+      ${micBroken || game.tries >= 1 ? `<button class="btn small primary" onclick="speakSaidIt()">✅ אמרתי!</button>` : ''}
+      ${game.tries >= 2 ? `<button class="btn small" onclick="speakNext()">דלג ⏭</button>` : ''}
+    </div>`}
   </div>`);
 }
+// Set when the phone's speech recognition never answers (common in iPhone home-screen apps).
+let micBroken = false, recog = null;
 function speakGo(){
-  if (game.rec) return;
+  if (game.locked) return;
+  if (game.rec){ try { recog.stop(); } catch(e){} return; }  // tap again = stop listening
   if ('speechSynthesis' in window) speechSynthesis.cancel();
   const g = game, w = game.list[game.i];
   let r;
-  try { r = new SR(); } catch(e){ return speakRender('המיקרופון לא זמין במכשיר הזה'); }
-  r.lang = 'en-US'; r.maxAlternatives = 5; r.interimResults = false;
-  let done = false;
-  const end = (alts, err) => {
-    if (done) return; done = true;
+  try { r = recog = new SR(); } catch(e){ micBroken = true; return speakRender('המיקרופון לא זמין במכשיר הזה – תגידו בקול ולחצו "אמרתי!"'); }
+  r.lang = 'en-US'; r.maxAlternatives = 5; r.interimResults = true; r.continuous = false;
+  let done = false, gotAudio = false, alts = [];
+  const timer = setTimeout(() => { try { r.abort(); } catch(e){} end(alts, 'timeout'); }, 6000);
+  const end = (heard, err) => {
+    if (done) return; done = true; clearTimeout(timer);
     if (game !== g) return;
     game.rec = false;
-    if (err === 'not-allowed' || err === 'service-not-allowed') return speakRender('צריך לאשר גישה למיקרופון 🙏');
-    if (alts && heardOk(w.en, alts)){
-      sfx.ok(); speakRender('מעולה! 🎉', true);
-      later(() => say(w.en), 300);
-      later(speakNext, 1500);
-    } else {
-      game.tries++; game.mistakes++;
-      const heard = alts && alts[0] ? `שמעתי "<span class="en">${esc(alts[0])}</span>"` : 'לא שמעתי טוב';
-      speakRender(`${heard} – נסו שוב! 💪`);
-    }
+    if (err === 'not-allowed' || err === 'service-not-allowed') { micBroken = true; return speakRender('צריך לאשר גישה למיקרופון 🙏 (או להגיד בקול וללחוץ "אמרתי!")'); }
+    if (heard && heardOk(w.en, heard)) return speakSuccess();
+    if (err === 'timeout' && !gotAudio && !heard.length) { micBroken = true; return speakRender('המיקרופון לא עונה בטלפון הזה 😕 תגידו בקול ולחצו "אמרתי!"'); }
+    if (err === 'network') return speakRender('המיקרופון צריך אינטרנט 📶 – תגידו בקול ולחצו "אמרתי!"');
+    game.tries++; game.mistakes++;
+    const msg = heard && heard[0] ? `שמעתי "<span class="en">${esc(heard[0])}</span>"` : 'לא שמעתי 🙉 דברו חזק וקרוב';
+    speakRender(`${msg} – נסו שוב! 💪`);
   };
-  r.onresult = e => end([...e.results[0]].map(a => a.transcript));
-  r.onerror = e => end(null, e.error);
-  r.onend = () => end([]);
-  game.rec = true; speakRender('אני מקשיב... 👂');
-  try { r.start(); } catch(e){ end(null, 'start'); }
+  r.onaudiostart = r.onsoundstart = r.onspeechstart = () => { gotAudio = true; };
+  r.onresult = e => {
+    gotAudio = true;
+    alts = [];
+    for (const res of e.results) for (const a of res) alts.push(a.transcript);
+    if (heardOk(w.en, alts)) { try { r.abort(); } catch(err){} end(alts); }           // accept as soon as we hear it
+    else if (e.results[e.results.length-1].isFinal) end(alts);
+  };
+  r.onerror = e => end(alts, e.error);
+  r.onend = () => end(alts);
+  game.rec = true; speakRender('אני מקשיב... 👂 (לחיצה נוספת עוצרת)');
+  try { r.start(); } catch(e){ end(alts, 'start'); }
 }
+function speakSuccess(){
+  if (game.locked) return; game.locked = true;
+  game.rec = false;
+  sfx.ok(); speakRender('מעולה! 🎉', true);
+  later(() => say(game.list[game.i].en), 300);
+  later(speakNext, 1500);
+}
+function speakSaidIt(){ if (!game.rec && !game.locked) speakSuccess(); }
 function speakNext(){
-  game.i++; game.tries = 0; game.rec = false;
+  game.i++; game.tries = 0; game.rec = false; game.locked = false;
   game.i >= game.total ? finish() : speakRender();
 }
 
