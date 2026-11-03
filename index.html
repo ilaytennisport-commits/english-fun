@@ -191,6 +191,8 @@ const STICKERS = ['🦄','🐉','🦖','🚀','🌈','🍦','🎈','🏆','👑'
 const STICK_EVERY = 5; // stars per sticker
 const AVATARS = ['🦁','🐯','🐼','🦊','🐸','🐵','🦄','🐰','🐻','🐨','🐷','🐙','🦖','🐱'];
 
+const APP_VERSION = 9;
+
 // ---------- Helpers ----------
 const $ = s => document.querySelector(s);
 const app = $('#app');
@@ -291,7 +293,7 @@ function screenProfiles(){
       <div class="ico">${p.avatar}</div><div class="lbl">${esc(p.name)}</div>
       <div class="sub">⭐ ${p.earned} · ${LEVELS[p.level].name}</div></button>`).join('')}
     <button class="card add" onclick="screenProfileForm()"><div class="ico">➕</div><div class="lbl">ילד/ה חדש/ה</div></button>
-  </div>${installBox()}`);
+  </div>${installBox()}<div style="text-align:center;color:#fff;opacity:.7;font-size:13px;margin-top:18px">גרסה ${APP_VERSION}</div>`);
 }
 
 // ---------- Install as an app ----------
@@ -384,6 +386,7 @@ function screenHome(){
 }
 
 function screenTopic(id){
+  if (window.reloadWhenFree) return location.reload();
   game = null;
   const t = TOPICS.find(x => x.id === id);
   show(`<div class="top"><button class="btn back" onclick="screenHome()">→</button>
@@ -638,6 +641,10 @@ async function speakGo(){
   const src = micCtx.createMediaStreamSource(stream);
   const proc = micCtx.createScriptProcessor(4096, 1, 1);
   let finished = false, voice = false, lastText = '', timer = null;
+  // Status shown small on screen, so a screenshot tells us what the phone is doing.
+  const stat = {frames: 0, peak: 0, track: (stream.getAudioTracks()[0] || {}).label || '?'};
+  const statLine = () => `<div class="en" style="font-size:12px;opacity:.7;margin-top:6px">v${APP_VERSION} · mic ✓ · ${micCtx.state} ${micCtx.sampleRate}Hz · frames ${stat.frames} · peak ${stat.peak.toFixed(3)} · ${esc(stat.track.slice(0,30))}</div>`;
+  const noSoundHelp = () => stat.frames === 0 ? '<br>🔇 הקול מהמיקרופון לא מגיע לאפליקציה.' : stat.peak < 0.001 ? '<br>🔇 המיקרופון מחזיר שקט מוחלט – אולי אפליקציה אחרת תופסת אותו (Bixby, Google Assistant, הקלטת שיחות).' : '';
   const tokens = t => (t || '').toLowerCase().split(/\s+/).filter(x => x && x !== '[unk]');
 
   const wrapUp = why => {
@@ -654,7 +661,7 @@ async function speakGo(){
     const other = tokens(lastText).filter(x => x !== w.en);
     const msg = other.length ? `שמעתי "<span class="en">${esc(other.join(' '))}</span>"`
       : voice ? 'לא הבנתי את המילה 🤔' : 'לא שמעתי 🙉 דברו חזק וקרוב לטלפון';
-    speakRender(`${msg} – נסו שוב! 💪`);
+    speakRender(`${msg} – נסו שוב! 💪${voice ? '' : noSoundHelp()}${statLine()}`);
   };
   rec.on('result', m => {
     const t = m.result && m.result.text;
@@ -666,7 +673,8 @@ async function speakGo(){
     if (finished) return;
     rec.acceptWaveform(e.inputBuffer);
     const d = e.inputBuffer.getChannelData(0); let s = 0;
-    for (let i = 0; i < d.length; i += 4) s += d[i] * d[i];
+    stat.frames++;
+    for (let i = 0; i < d.length; i += 4){ s += d[i] * d[i]; const a = Math.abs(d[i]); if (a > stat.peak) stat.peak = a; }
     const rms = Math.sqrt(s / (d.length / 4));
     const el = document.getElementById('lvl'); if (el) el.style.width = Math.min(100, rms * 500) + '%';
     if (rms > 0.03 && !voice){ voice = true; setMsg('שומע אותך... 👂'); }
@@ -676,6 +684,13 @@ async function speakGo(){
   g.stopRec = why => { if (finished) return; try { rec.retrieveFinalResult(); } catch(e){} setTimeout(() => wrapUp(why), 700); };
   timer = setTimeout(() => g.stopRec && g.stopRec('timeout'), 7000);
   speakRender('דברו עכשיו! 👄');
+  const live = setInterval(() => {
+    if (finished || game !== g){ clearInterval(live); return; }
+    if (micCtx.state !== 'running' && micCtx.resume) micCtx.resume();
+    const box = document.querySelector('.center'); if (!box) return;
+    let el = document.getElementById('stat'); if (!el){ el = document.createElement('div'); el.id = 'stat'; box.appendChild(el); }
+    el.innerHTML = statLine();
+  }, 500);
 }
 function speakSuccess(){
   if (game.locked) return; game.locked = true;
@@ -765,7 +780,16 @@ function finish(stars){
 // ---------- Start ----------
 if (db.profiles.length === 1 && isStandalone()){ cur = db.profiles[0]; screenHome(); } else screenProfiles();
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')){
-  navigator.serviceWorker.register('sw.js').catch(() => {});
+  navigator.serviceWorker.register('sw.js').then(reg => {
+    // Check for a new version whenever the app comes back to the screen.
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) reg.update().catch(() => {}); });
+  }).catch(() => {});
+  // A new version took over: reload, unless a child is in the middle of a game.
+  let hadController = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadController){ hadController = true; return; }
+    if (!game) location.reload(); else window.reloadWhenFree = true;
+  });
 }
 </script>
 </body>
